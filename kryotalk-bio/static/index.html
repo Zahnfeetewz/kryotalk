@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>kryotalk - Alles was du willst, an einem Ort.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{--bg:#09090b;--card:#111113;--card2:#18181b;--border:#27272a;--accent:#7c3aed;--accent2:#a78bfa;--text:#fafafa;--text2:#a1a1aa;--text3:#71717a;--green:#22c55e;--radius:12px;--radius-lg:20px}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.6}
+    a{color:inherit;text-decoration:none}
+
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;background:rgba(9,9,11,.8);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+    .nav-logo{font-size:20px;font-weight:800;letter-spacing:-0.5px}.nav-logo span{color:var(--accent)}
+    .nav-links{display:flex;gap:24px;align-items:center}
+    .nav-links a{font-size:14px;color:var(--text2);transition:color .2s}.nav-links a:hover{color:var(--text)}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s}
+    .btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#6d28d9;transform:translateY(-1px)}
+    .btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)}.btn-outline:hover{border-color:var(--text3)}
+    .btn-lg{padding:14px 28px;font-size:16px;border-radius:var(--radius-lg)}
+    .btn-ghost{background:transparent;color:var(--text2)}.btn-ghost:hover{color:var(--text)}
+
+    .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 24px 80px;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 50% 30%, rgba(124,58,237,.08) 0%, transparent 60%);pointer-events:none}
+    .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:100px;border:1px solid var(--border);font-size:13px;color:var(--text2);margin-bottom:32px;animation:fadeInUp .6s}
+    .hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+    .hero h1{font-size:clamp(40px,7vw,80px);font-weight:900;letter-spacing:-2px;line-height:1;margin-bottom:24px;animation:fadeInUp .6s .1s both}
+    .hero h1 span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .hero p{font-size:18px;color:var(--text2);max-width:560px;margin-bottom:40px;animation:fadeInUp .6s .2s both}
+    .hero-cta{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;animation:fadeInUp .6s .3s both}
+    .hero-claim{display:flex;gap:0;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border);animation:fadeInUp .6s .4s both}
+    .hero-claim input{background:var(--card);border:none;padding:16px 20px;color:var(--text);font-size:16px;width:240px;outline:none;font-family:inherit}
+    .hero-claim input::placeholder{color:var(--text3)}
+    .hero-claim .suffix{background:var(--card);color:var(--text3);padding:16px 16px 16px 0;font-size:16px;display:flex;align-items:center;border-left:1px solid var(--border)}
+    .hero-claim button{padding:16px 28px;background:var(--accent);color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s}
+    .hero-claim button:hover{background:#6d28d9}
+
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:800px;margin:0 auto;padding:0 24px 120px}
+    .stat{text-align:center}
+    .stat-num{font-size:36px;font-weight:900;letter-spacing:-1px;background:linear-gradient(135deg,var(--text),var(--text2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .stat-label{font-size:13px;color:var(--text3);margin-top:4px}
+
+    .section{padding:100px 24px;max-width:1100px;margin:0 auto}
+    .section-label{font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;text-align:center}
+    .section-title{font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-1px;text-align:center;margin-bottom:16px}
+    .section-desc{font-size:16px;color:var(--text2);text-align:center;max-width:560px;margin:0 auto 60px}
+
+    .features{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+    .feature{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;transition:all .3s}
+    .feature:hover{border-color:var(--accent);transform:translateY(-4px);box-shadow:0 20px 40px rgba(124,58,237,.1)}
+    .feature-icon{width:48px;height:48px;border-radius:12px;background:rgba(124,58,237,.15);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:20px}
+    .feature h3{font-size:18px;font-weight:700;margin-bottom:8px}
+    .feature p{font-size:14px;color:var(--text2);line-height:1.6}
+
+    .showcase{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:40px;margin-top:60px;position:relative;overflow:hidden}
+    .showcase::before{content:'';position:absolute;top:0;left:0;right:0;height:200px;background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(167,139,250,.05));pointer-events:none}
+    .showcase-inner{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;position:relative;z-index:1}
+    .showcase-text h2{font-size:32px;font-weight:800;margin-bottom:16px;letter-spacing:-0.5px}
+    .showcase-text p{color:var(--text2);margin-bottom:24px;font-size:15px}
+    .showcase-preview{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;text-align:center}
+    .showcase-preview .avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800}
+    .showcase-preview .name{font-size:20px;font-weight:700;margin-bottom:4px}
+    .showcase-preview .handle{font-size:13px;color:var(--text3);margin-bottom:20px}
+    .showcase-preview .preview-link{display:block;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;margin-bottom:8px;font-size:14px;font-weight:500;transition:all .2s;color:var(--text)}
+    .showcase-preview .preview-link:hover{border-color:var(--accent);background:var(--card2)}
+
+    .pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:700px;margin:0 auto}
+    .price-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:40px;position:relative;transition:all .3s}
+    .price-card.popular{border-color:var(--accent)}
+    .price-card.popular::before{content:'Beliebteste Wahl';position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;padding:4px 16px;border-radius:100px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+    .price-card h3{font-size:20px;font-weight:700;margin-bottom:8px}
+    .price-card .price{font-size:48px;font-weight:900;letter-spacing:-2px;margin-bottom:4px}
+    .price-card .price span{font-size:16px;font-weight:400;color:var(--text3)}
+    .price-card .period{font-size:13px;color:var(--text3);margin-bottom:24px}
+    .price-card .features-list{list-style:none;margin-bottom:32px}
+    .price-card .features-list li{padding:8px 0;font-size:14px;color:var(--text2);display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+    .price-card .features-list li:last-child{border:none}
+    .price-card .features-list .check{color:var(--green);font-size:16px}
+    .price-card .btn{width:100%;justify-content:center}
+
+    .faq{max-width:700px;margin:0 auto}
+    .faq-item{border-bottom:1px solid var(--border);padding:24px 0}
+    .faq-q{font-size:16px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:color .2s}
+    .faq-q:hover{color:var(--accent)}
+    .faq-q .arrow{transition:transform .3s;font-size:20px}
+    .faq-q.open .arrow{transform:rotate(45deg)}
+    .faq-a{font-size:14px;color:var(--text2);max-height:0;overflow:hidden;transition:all .3s;line-height:1.7}
+    .faq-a.open{max-height:300px;padding-top:16px}
+
+    footer{border-top:1px solid var(--border);padding:40px 24px;text-align:center}
+    .footer-inner{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+    .footer-logo{font-size:18px;font-weight:800}.footer-logo span{color:var(--accent)}
+    .footer-links{display:flex;gap:24px}
+    .footer-links a{font-size:13px;color:var(--text3);transition:color .2s}.footer-links a:hover{color:var(--text)}
+
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:200;align-items:center;justify-content:center}
+    .modal-overlay.active{display:flex}
+    .modal{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:40px;width:420px;max-width:90vw;position:relative}
+    .modal h2{font-size:24px;font-weight:800;margin-bottom:8px}
+    .modal .subtitle{font-size:14px;color:var(--text2);margin-bottom:28px}
+    .modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text3);font-size:24px;cursor:pointer}
+    .form-group{margin-bottom:16px}
+    .form-group label{display:block;font-size:13px;font-weight:500;color:var(--text2);margin-bottom:6px}
+    .form-group input{width:100%;padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border-color .2s}
+    .form-group input:focus{border-color:var(--accent)}
+    .form-group .error{color:#ef4444;font-size:12px;margin-top:4px}
+    .form-tabs{display:flex;gap:0;margin-bottom:24px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    .form-tab{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--text3);border:none;font-family:inherit;transition:all .2s}
+    .form-tab.active{background:var(--accent);color:#fff}
+
+    @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+    @media(max-width:768px){
+      .stats{grid-template-columns:repeat(2,1fr);gap:16px}
+      .features{grid-template-columns:1fr}
+      .showcase-inner{grid-template-columns:1fr}
+      .pricing-grid{grid-template-columns:1fr}
+      .nav-links a:not(.btn){display:none}
+      .hero h1{font-size:36px;letter-spacing:-1px}
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">kryo<span>talk</span></a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#pricing">Preise</a>
+    <a href="#faq">FAQ</a>
+    <a href="#" class="btn btn-ghost" onclick="openModal('login');return false">Einloggen</a>
+    <a href="#" class="btn btn-primary" onclick="openModal('register');return false">Registrieren</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-badge"><span class="dot"></span> Über 10.000+ Nutzer</div>
+  <h1>Alles was du willst,<br><span>an einem Ort.</span></h1>
+  <p>kryotalk ist deine moderne Link-in-Bio Seite mit Customization, Analytics und mehr. Schnell, sicher und kostenlos.</p>
+  <div class="hero-claim">
+    <input type="text" id="claimInput" placeholder="username" autocomplete="off" spellcheck="false">
+    <span class="suffix">.kryotalk.app</span>
+    <button onclick="claimUsername()">Sichern</button>
+  </div>
+</section>
+
+<div class="stats" id="statsSection">
+  <div class="stat"><div class="stat-num" id="statViews">0</div><div class="stat-label">Profil-Aufrufe</div></div>
+  <div class="stat"><div class="stat-num" id="statUsers">0</div><div class="stat-label">Nutzer</div></div>
+  <div class="stat"><div class="stat-num" id="statLinks">0</div><div class="stat-label">Links erstellt</div></div>
+  <div class="stat"><div class="stat-num" id="statUploads">0</div><div class="stat-label">Datei-Uploads</div></div>
+</div>
+
+<section class="section" id="features">
+  <div class="section-label">Features</div>
+  <h2 class="section-title">Alles was du brauchst.</h2>
+  <p class="section-desc">Erstelle deine eigene Profilseite mit allen Funktionen die du brauchst.</p>
+  <div class="features">
+    <div class="feature">
+      <div class="feature-icon">🎨</div>
+      <h3>Custom Themes</h3>
+      <p>Passe Farben, Schriften und Layouts an deinen Style an. Dark Mode, Gradienten und mehr.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">📊</div>
+      <h3>Analytics</h3>
+      <p>Verfolge deine Profil-Aufrufe und Link-Klicks in Echtzeit. Wissen ist Macht.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">⚡</div>
+      <h3>Blitzschnell</h3>
+      <p>Optimiert für Geschwindigkeit. Deine Seite lädt in Millisekunden.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🔒</div>
+      <h3>Sicher & Privat</h3>
+      <p>Kein Tracking, keine Werbung. Deine Daten gehören dir.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">📁</div>
+      <h3>Datei-Hosting</h3>
+      <p>Upload und Teile Dateien direkt von deinem Profil. Bis zu 10MB pro Datei.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">✨</div>
+      <h3>Profile Effects</h3>
+      <p>Effekte wie Regen, Schnee, Partikel und Hintergrund-Animationen für deine Seite.</p>
+    </div>
+  </div>
+
+  <div class="showcase">
+    <div class="showcase-inner">
+      <div class="showcase-text">
+        <h2>Dein Profil,<br>dein Style.</h2>
+        <p>Erstelle eine einzigartige Profilseite mit deinen Links, Social-Media und mehr. Alles an einem Ort für deine Community.</p>
+        <a href="#" class="btn btn-primary btn-lg" onclick="openModal('register');return false">Jetzt starten</a>
+      </div>
+      <div class="showcase-preview">
+        <div class="avatar">K</div>
+        <div class="name">kryotalk</div>
+        <div class="handle">@kryotalk</div>
+        <a class="preview-link" href="#">Meine Portfolio-Seite</a>
+        <a class="preview-link" href="#">YouTube Kanal</a>
+        <a class="preview-link" href="#">Discord Server</a>
+        <a class="preview-link" href="#">Letztes Projekt</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="pricing">
+  <div class="section-label">Preise</div>
+  <h2 class="section-title">Einfach und fair.</h2>
+  <p class="section-desc">Starte kostenlos oder upgrade für mehr Features.</p>
+  <div class="pricing-grid">
+    <div class="price-card">
+      <h3>Kostenlos</h3>
+      <div class="price">0€ <span>/ Lifetime</span></div>
+      <p class="period">Für Anfänger</p>
+      <ul class="features-list">
+        <li><span class="check">✓</span> Basis-Customization</li>
+        <li><span class="check">✓</span> Profil-Analytics</li>
+        <li><span class="check">✓</span> Social Links hinzufügen</li>
+        <li><span class="check">✓</span> Datei-Upload (10MB)</li>
+        <li><span class="check">✓</span> Öffentliches Profil</li>
+      </ul>
+      <a href="#" class="btn btn-outline" onclick="openModal('register');return false">Jetzt starten</a>
+    </div>
+    <div class="price-card popular">
+      <h3>Premium</h3>
+      <div class="price">4,99€ <span>/ Lifetime</span></div>
+      <p class="period">Einmalig zahlen. Für immer behalten.</p>
+      <ul class="features-list">
+        <li><span class="check">✓</span> Alles aus Kostenlos</li>
+        <li><span class="check">✓</span> Exklusives Badge</li>
+        <li><span class="check">✓</span> Custom Layouts</li>
+        <li><span class="check">✓</span> Custom Schriftarten</li>
+        <li><span class="check">✓</span> Profil-Effekte</li>
+        <li><span class="check">✓</span> Erweiterte Customization</li>
+        <li><span class="check">✓</span> SEO Metadata</li>
+      </ul>
+      <a href="#" class="btn btn-primary" onclick="openModal('register');return false">Premium holen</a>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="faq">
+  <div class="section-label">FAQ</div>
+  <h2 class="section-title">Häufige Fragen</h2>
+  <p class="section-desc">Alles was du wissen musst.</p>
+  <div class="faq">
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Was ist kryotalk? <span class="arrow">+</span></div>
+      <div class="faq-a">kryotalk ist eine Link-in-Bio Plattform mit der du all deine Links, Social Media und Projekte an einem Ort teilen kannst. Moderne Customization, Analytics und mehr.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Ist kryotalk kostenlos? <span class="arrow">+</span></div>
+      <div class="faq-a">Ja! kryotalk ist komplett kostenlos nutzbar. Für erweiterte Features gibt es ein Premium-Paket.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Was kann ich mit kryotalk machen? <span class="arrow">+</span></div>
+      <div class="faq-a">Erstelle eine individuelle Profilseite mit deinen Social-Media Links, Website, Projekten und mehr. Teile den Link mit deiner Community.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Ist kryotalk sicher? <span class="arrow">+</span></div>
+      <div class="faq-a">Ja. Verschlüsselte Verbindungen, sichere Infrastruktur und kein Tracking. Über 10.000 Nutzer vertrauen kryotalk.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Wie lange dauert die Einrichtung? <span class="arrow">+</span></div>
+      <div class="faq-a">Weniger als eine Minute. Erstelle ein Account, füge deine Links hinzu und teile dein Profil.</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">kryo<span>talk</span></div>
+    <div class="footer-links">
+      <a href="#features">Features</a>
+      <a href="#pricing">Preise</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <div style="font-size:13px;color:var(--text3)">&copy; 2025 kryotalk. Alle Rechte vorbehalten.</div>
+  </div>
+</footer>
+
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <div id="authModal"></div>
+  </div>
+</div>
+
+<script>
+function openModal(type){
+  const m=document.getElementById('authModal');
+  const tabLogin=type==='login';
+  m.innerHTML=`
+    <h2>${tabLogin?'Willkommen zurück':'Konto erstellen'}</h2>
+    <p class="subtitle">${tabLogin?'Logge dich ein um dein Profil zu verwalten':'Starte in unter einer Minute'}</p>
+    <div class="form-tabs">
+      <button class="form-tab ${tabLogin?'active':''}" onclick="openModal('login')">Einloggen</button>
+      <button class="form-tab ${!tabLogin?'active':''}" onclick="openModal('register')">Registrieren</button>
+    </div>
+    <form onsubmit="return handleAuth(event,'${type}')">
+      ${!tabLogin?'<div class="form-group"><label>Username</label><input type="text" id="regUsername" placeholder="meinname" required minlength="3"></div>':''}
+      ${!tabLogin?'<div class="form-group"><label>E-Mail (optional)</label><input type="email" id="regEmail" placeholder="email@example.com"></div>':''}
+      ${tabLogin?'<div class="form-group"><label>Username</label><input type="text" id="loginUsername" placeholder="meinname" required></div>':''}
+      <div class="form-group"><label>Passwort</label><input type="password" id="${tabLogin?'login':'reg'}Password" placeholder="••••••••" required></div>
+      <div id="authError" class="form-group"><span class="error"></span></div>
+      <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center" id="authBtn">${tabLogin?'Einloggen':'Registrieren'}</button>
+    </form>`;
+  document.getElementById('modalOverlay').classList.add('active');
+}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('active')}
+
+async function handleAuth(e,type){
+  e.preventDefault();
+  const btn=document.getElementById('authBtn');
+  btn.textContent='Laden...';btn.disabled=true;
+  const err=document.querySelector('#authError .error');
+  try{
+    const isLogin=type==='login';
+    const body=isLogin
+      ?{username:document.getElementById('loginUsername').value,password:document.getElementById('loginPassword').value}
+      :{username:document.getElementById('regUsername').value,password:document.getElementById('regPassword').value,email:document.getElementById('regEmail')?.value||''};
+    const r=await fetch('/api/'+type,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await r.json();
+    if(!r.ok){err.textContent=d.error;btn.textContent=isLogin?'Einloggen':'Registrieren';btn.disabled=false;return false}
+    window.location.href='/dashboard';
+  }catch(e){err.textContent='Netzwerkfehler';btn.textContent=type==='login'?'Einloggen':'Registrieren';btn.disabled=false}
+  return false;
+}
+
+function claimUsername(){
+  const v=document.getElementById('claimInput').value.trim();
+  if(!v){return}
+  window.location.href='/register?claim='+encodeURIComponent(v);
+}
+
+function toggleFaq(el){
+  const a=el.nextElementSibling;
+  el.classList.toggle('open');
+  a.classList.toggle('open');
+}
+
+function animateNum(el,target){
+  let current=0;const step=Math.ceil(target/60);
+  const interval=setInterval(()=>{current+=step;if(current>=target){current=target;clearInterval(interval)}el.textContent=current.toLocaleString('de-DE')+'+'},20);
+}
+
+async function loadStats(){
+  try{
+    const r=await fetch('/api/stats');const d=await r.json();
+    animateNum(document.getElementById('statViews'),d.views||38300000);
+    animateNum(document.getElementById('statUsers'),d.users||1070000);
+    animateNum(document.getElementById('statLinks'),d.links||500000);
+    animateNum(document.getElementById('statUploads'),d.uploads||32400);
+  }catch(e){}
+}
+loadStats();
+</script>
+
+</body>
+</html>

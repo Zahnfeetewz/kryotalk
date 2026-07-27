@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>kryotalk - Profil</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Inter',sans-serif;background:#0a0a0a;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+    #effectCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+    .profile{position:relative;z-index:1;text-align:center;padding:40px 24px;max-width:420px;width:100%}
+    .avatar{width:100px;height:100px;border-radius:50%;margin:0 auto 16px;background:linear-gradient(135deg,#7c3aed,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:900;overflow:hidden;box-shadow:0 0 40px rgba(124,58,237,.3)}
+    .avatar img{width:100%;height:100%;object-fit:cover}
+    .username{font-size:22px;font-weight:800;margin-bottom:4px}
+    .handle{font-size:14px;color:#71717a;margin-bottom:12px}
+    .bio{font-size:14px;color:#a1a1aa;margin-bottom:24px;line-height:1.6}
+    .verified{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 10px;border-radius:100px;background:rgba(124,58,237,.15);color:#a78bfa;font-weight:600;margin-left:6px}
+    .link-list{display:flex;flex-direction:column;gap:10px}
+    .link-btn{display:flex;align-items:center;gap:12px;padding:16px 20px;border:1px solid #27272a;border-radius:14px;background:rgba(255,255,255,.04);color:#fafafa;font-size:15px;font-weight:500;text-decoration:none;transition:all .25s;backdrop-filter:blur(10px)}
+    .link-btn:hover{border-color:#7c3aed;background:rgba(124,58,237,.08);transform:translateY(-2px);box-shadow:0 10px 30px rgba(124,58,237,.1)}
+    .link-btn .link-icon{font-size:20px;width:28px;text-align:center}
+    .link-btn .link-text{flex:1;text-align:left}
+    .link-btn .link-arrow{color:#71717a;font-size:16px}
+    .not-found{text-align:center;padding:60px 24px}
+    .not-found h1{font-size:48px;font-weight:900;margin-bottom:8px}
+    .not-found p{color:#71717a;font-size:16px}
+    .not-found a{color:#7c3aed;text-decoration:none;font-weight:600}
+    .powered{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);font-size:12px;color:#3f3f46;z-index:1}
+    .powered a{color:#7c3aed;text-decoration:none}
+  </style>
+</head>
+<body>
+  <canvas id="effectCanvas"></canvas>
+  <div class="profile" id="profileContent">
+    <div style="text-align:center;color:#71717a">Laden...</div>
+  </div>
+  <div class="powered">Erstellt mit <a href="/">kryotalk</a></div>
+
+<script>
+const username=window.location.pathname.slice(1).replace(/\//g,'');
+const canvas=document.getElementById('effectCanvas');
+const ctx=canvas.getContext('2d');
+let particles=[];
+
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight}
+window.addEventListener('resize',resizeCanvas);resizeCanvas();
+
+function startEffect(type){
+  if(type==='rain'){
+    for(let i=0;i<120;i++)particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,speed:4+Math.random()*8,length:15+Math.random()*20});
+    function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='rgba(124,58,237,.3)';ctx.lineWidth=1;particles.forEach(p=>{ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x,p.y+p.length);ctx.stroke();p.y+=p.speed;if(p.y>canvas.height){p.y=-p.length;p.x=Math.random()*canvas.width}});requestAnimationFrame(draw)}draw();
+  }else if(type==='snow'){
+    for(let i=0;i<80;i++)particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:1+Math.random()*3,speed:.5+Math.random()*2,wind:Math.random()*.5});
+    function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='rgba(255,255,255,.4)';particles.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();p.y+=p.speed;p.x+=p.wind;if(p.y>canvas.height){p.y=-p.r;p.x=Math.random()*canvas.width}});requestAnimationFrame(draw)}draw();
+  }else if(type==='stars'){
+    for(let i=0;i<60;i++)particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:.5+Math.random()*1.5,twinkle:Math.random()*Math.PI*2});
+    function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);particles.forEach(p=>{p.twinkle+=.02;const a=.3+Math.sin(p.twinkle)*.3;ctx.fillStyle=`rgba(255,255,255,${a})`;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill()});requestAnimationFrame(draw)}draw();
+  }else if(type==='particles'){
+    for(let i=0;i<40;i++)particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-.5)*.5,vy:(Math.random()-.5)*.5,r:1+Math.random()*2});
+    function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='rgba(124,58,237,.5)';particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>canvas.width)p.vx*=-1;if(p.y<0||p.y>canvas.height)p.vy*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill()});particles.forEach((a,i)=>{particles.slice(i+1).forEach(b=>{const d=Math.hypot(a.x-b.x,a.y-b.y);if(d<120){ctx.strokeStyle=`rgba(124,58,237,${.15*(1-d/120)})`;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}})});requestAnimationFrame(draw)}draw();
+  }else if(type==='matrix'){
+    const cols=Math.floor(canvas.width/14);
+    const drops=new Array(cols).fill(1);
+    const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*';
+    function draw(){ctx.fillStyle='rgba(0,0,0,.05)';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='rgba(34,197,94,.8)';ctx.font='14px monospace';drops.forEach((y,i)=>{const c=chars[Math.floor(Math.random()*chars.length)];ctx.fillText(c,i*14,y*14);if(y*14>canvas.height&&Math.random()>.975)drops[i]=0;drops[i]++});requestAnimationFrame(draw)}draw();
+  }
+}
+
+async function loadProfile(){
+  if(!username){document.getElementById('profileContent').innerHTML='<div class="not-found"><h1>kryotalk</h1><p>Erstelle dein eigenes Profil</p><a href="/">Jetzt starten</a></div>';return}
+  try{
+    const r=await fetch('/api/profile/'+encodeURIComponent(username));
+    if(!r.ok)throw new Error();
+    const p=await r.json();
+    document.title=p.username+' - kryotalk';
+    const t=p.theme||{};
+    document.body.style.background=t.bg||'#0a0a0a';
+    const links=(p.links||[]).filter(l=>l.enabled!==false);
+    const verified=p.verified?'<span class="verified">✓ Verifiziert</span>':'';
+    document.getElementById('profileContent').innerHTML=`
+      <div class="avatar" style="background:linear-gradient(135deg,${t.accent||'#7c3aed'},${t.accent||'#7c3aed'}88)">${p.avatar?'<img src="'+p.avatar+'">':p.username.charAt(0).toUpperCase()}</div>
+      <div class="username" style="color:${t.textColor||'#fff'}">${p.username}${verified}</div>
+      <div class="handle">@${p.username}</div>
+      ${p.bio?'<div class="bio">'+p.bio.replace(/</g,'&lt;')+'</div>':''}
+      <div class="link-list">${links.map(l=>`<a class="link-btn" href="/api/link/${p.username}/${l.id}/click" style="border-color:${t.accent?t.accent+'33':''};color:${t.textColor||'#fff'}" onmouseover="this.style.borderColor='${t.accent||'#7c3aed'}'" onmouseout="this.style.borderColor='${t.accent||'#7c3aed'}33'"><span class="link-icon">${l.icon||'🔗'}</span><span class="link-text">${l.title}</span><span class="link-arrow">→</span></a>`).join('')}</div>`;
+    if(p.effects){
+      if(p.effects.rain)startEffect('rain');
+      else if(p.effects.snow)startEffect('snow');
+      else if(p.effects.stars)startEffect('stars');
+      else if(p.effects.particles)startEffect('particles');
+      else if(p.effects.matrix)startEffect('matrix');
+    }
+  }catch(e){
+    document.getElementById('profileContent').innerHTML='<div class="not-found"><h1>404</h1><p>Profil nicht gefunden</p><a href="/">Zur Startseite</a></div>';
+  }
+}
+loadProfile();
+</script>
+</body>
+</html>
