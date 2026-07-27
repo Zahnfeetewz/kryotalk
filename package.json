@@ -1,25 +1,18 @@
 {
   "name": "kryotalk",
   "version": "1.0.0",
-  "description": "",
+  "description": "Kryotalk - Discord Clone",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "server": "node server-standalone.js",
+    "server": "node src/server.js",
+    "public": "node tunnel.js",
     "tunnel": "node tunnel.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "cloudflared": "^0.7.1",
-    "electron": "^43.2.0",
-    "express": "^5.2.1",
-    "multer": "^2.2.0",
-    "nodemailer": "^9.0.3",
-    "otpauth": "^9.5.1",
-    "qrcode": "^1.5.4",
-    "socket.io": "^4.8.3"
+    "electron": "^28.0.0",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "multer": "^1.4.5-lts.1"
   }
 }

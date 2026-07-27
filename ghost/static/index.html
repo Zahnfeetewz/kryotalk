@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ghost</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👻</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="setupScreen">
+    <div class="auth-card">
+      <div class="auth-logo">👻</div>
+      <h1 class="auth-title">GHOST</h1>
+      <p class="auth-subtitle">Anonym. Verschlüsselt. Unverfolgbar.</p>
+
+      <div id="setupGenerate">
+        <button class="auth-submit" id="btnGenerate">Neue Identität erstellen</button>
+        <div class="auth-sep">oder</div>
+        <button class="auth-submit secondary" id="btnRestore">Seed-Phrase wiederherstellen</button>
+      </div>
+
+      <div id="setupRestore" style="display:none">
+        <div class="auth-field">
+          <label>12-Wort Seed-Phrase</label>
+          <textarea id="seedInput" rows="3" placeholder="word1 word2 word3 ..."></textarea>
+        </div>
+        <button class="auth-submit" id="btnDoRestore">Wiederherstellen</button>
+        <button class="auth-submit secondary" id="btnBack">Zurück</button>
+      </div>
+
+      <div id="setupSeed" style="display:none">
+        <div class="seed-warning">
+          ⚠️ Schreibe diese 12 Wörter auf und bewahre sie sicher auf.<br>
+          Sie sind der EINZIGE Weg, dein Konto wiederherzustellen.
+        </div>
+        <div class="seed-words" id="seedWords"></div>
+        <div class="seed-verify" id="seedVerify" style="display:none">
+          <p>Bestätige deine Seed-Phrase (Gib Wort #<span id="verifyIndex"></span> ein):</p>
+          <input type="text" id="verifyInput" autocomplete="off">
+          <div id="verifyError" class="auth-error"></div>
+        </div>
+        <button class="auth-submit" id="btnConfirmSeed">Ich habe sie aufgeschrieben</button>
+        <button class="auth-submit secondary" id="btnShowAgain">Nochmal anzeigen</button>
+      </div>
+
+      <div id="setupIdentity" style="display:none">
+        <div class="seed-warning success">✓ Identität erstellt</div>
+        <div class="identity-info">
+          <div class="identity-id-label">Deine Ghost-ID:</div>
+          <div class="identity-id" id="myIdentityId"></div>
+          <button class="auth-submit small" id="btnCopyId">ID kopieren</button>
+        </div>
+        <div class="identity-info">
+          <div class="identity-id-label">Kontakt hinzufügen:</div>
+          <button class="auth-submit secondary" id="btnShowQR">QR-Code / Link anzeigen</button>
+        </div>
+        <button class="auth-submit" id="btnStartChat">Messenger starten</button>
+      </div>
+
+      <div id="setupError" class="auth-error"></div>
+    </div>
+  </div>
+
+  <div id="app" style="display:none">
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="app-brand">👻 GHOST</div>
+        <button class="icon-btn" onclick="showAddContact()" title="Kontakt hinzufügen">+</button>
+      </div>
+      <div class="conv-list" id="convList"></div>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="userAvatar"></div>
+          <div class="user-details">
+            <div class="user-name" id="userName">Du</div>
+          </div>
+        </div>
+        <button class="icon-btn" onclick="showSettings()" title="Einstellungen">⚙️</button>
+      </div>
+    </div>
+
+    <div class="chat-area">
+      <div class="chat-empty" id="chatEmpty">
+        <div class="empty-icon">👻</div>
+        <h2>Ghost Messenger</h2>
+        <p>Verschlüssele deine erste Unterhaltung</p>
+      </div>
+
+      <div class="chat-view" id="chatView" style="display:none">
+        <div class="chat-header">
+          <button class="icon-btn mobile-back" onclick="closeChat()">←</button>
+          <div class="chat-header-info">
+            <div class="chat-header-avatar" id="chatAvatar"></div>
+            <div>
+              <div class="chat-header-name" id="chatName"></div>
+              <div class="chat-header-status" id="chatStatus">Verbunden</div>
+            </div>
+          </div>
+          <div class="chat-header-actions">
+            <button class="icon-btn" onclick="toggleEphemeral()" title="Selbstzerstörend">⏱️</button>
+            <button class="icon-btn" onclick="deleteAllMessages()" title="Alle löschen">🗑️</button>
+          </div>
+        </div>
+        <div class="messages-list" id="messagesList"></div>
+        <div class="chat-input-area">
+          <textarea id="messageInput" rows="1" placeholder="Nachricht..."></textarea>
+          <button class="send-btn" onclick="sendMessage()">➤</button>
+        </div>
+        <div class="ephemeral-bar" id="ephemeralBar" style="display:none">
+          ⏱️ Selbstzerstörung: <select id="ephemeralTimer">
+            <option value="0">Aus</option>
+            <option value="30">30 Sekunden</option>
+            <option value="60">1 Minute</option>
+            <option value="300">5 Minuten</option>
+            <option value="3600">1 Stunde</option>
+            <option value="86400">24 Stunden</option>
+          </select>
+          <button onclick="toggleEphemeral()" class="ephemeral-close">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay" style="display:none">
+      <div class="modal" id="modalContent"></div>
+    </div>
+
+    <div class="settings-panel" id="settingsPanel" style="display:none">
+      <div class="settings-header">
+        <button class="icon-btn" onclick="hideSettings()">←</button>
+        <h3>Einstellungen</h3>
+      </div>
+      <div class="settings-body">
+        <h4>Deine Identität</h4>
+        <div class="identity-info">
+          <div class="identity-id-label">Ghost-ID:</div>
+          <div class="identity-id" id="settingsId"></div>
+          <button class="auth-submit small" onclick="copyMyId()">Kopieren</button>
+        </div>
+        <div class="identity-info">
+          <div class="identity-id-label">Seed-Phrase (GEHEIM!):</div>
+          <button class="auth-submit secondary small" onclick="showMySeed()">Seed-Phrase anzeigen</button>
+        </div>
+        <hr>
+        <h4>Sicherheit</h4>
+        <p class="settings-info">🔒 Double Ratchet + X3DH (Signal Protocol)</p>
+        <p class="settings-info">🔑 Private Keys verlassen nie dein Gerät</p>
+        <p class="settings-info">🗑️ Server speichert keine Logs, keine IPs</p>
+        <p class="settings-info">👻 Kein Account, keine E-Mail, kein Telefon</p>
+        <hr>
+        <button class="auth-submit danger" onclick="deleteAccount()">Identität löschen</button>
+      </div>
+    </div>
+
+    <div class="qr-modal" id="qrModal" style="display:none">
+      <div class="modal">
+        <h3>Dein Ghost-QR-Code</h3>
+        <div class="qr-container">
+          <canvas id="qrCanvas" width="256" height="256"></canvas>
+        </div>
+        <div class="qr-link" id="qrLink"></div>
+        <button class="auth-submit small" onclick="copyMyId()">ID kopieren</button>
+        <button class="auth-submit secondary small" onclick="hideQR()">Schließen</button>
+      </div>
+    </div>
+
+    <div class="add-contact-modal" id="addContactModal" style="display:none">
+      <div class="modal">
+        <h3>Kontakt hinzufügen</h3>
+        <div class="auth-field">
+          <label>Ghost-ID oder Link einfügen</label>
+          <input type="text" id="contactInput" placeholder="ghost:... oder reine ID">
+        </div>
+        <div id="contactResult"></div>
+        <button class="auth-submit" onclick="addContact()">Verbinden</button>
+        <button class="auth-submit secondary" onclick="hideAddContact()">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
