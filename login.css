@@ -1,0 +1,198 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #313338;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: #f2f3f5;
+  position: relative;
+  overflow: hidden;
+}
+
+#login-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+#login-bg img,
+#login-bg video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+#login-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+}
+
+.login-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.login-card {
+  width: 340px;
+  background: #2b2d31;
+  border-radius: 8px;
+  padding: 28px 32px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+h1 {
+  text-align: center;
+  font-size: 20px;
+  margin: 0 0 18px;
+}
+
+.tabs {
+  display: flex;
+  margin-bottom: 18px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #1e1f22;
+}
+
+.tab {
+  flex: 1;
+  background: #1e1f22;
+  color: #b5bac1;
+  border: none;
+  padding: 8px 0;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #5865f2;
+  color: #fff;
+}
+
+.hidden { display: none; }
+
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #b5bac1;
+  margin: 12px 0 6px;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 4px;
+  border: none;
+  background: #1e1f22;
+  color: #f2f3f5;
+  font-size: 16px;
+}
+
+input:focus { outline: 2px solid #5865f2; }
+
+.hint {
+  font-size: 12px;
+  margin: 6px 0 0;
+  color: #949ba4;
+}
+
+.error {
+  font-size: 12px;
+  color: #fa777c;
+  min-height: 16px;
+  margin: 10px 0 0;
+}
+
+button.primary {
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px;
+  background: #5865f2;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button.primary:hover { background: #4752c4; }
+
+.rarity-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+.rarity-legendary { background: #f0b232; color: #3a2900; }
+.rarity-epic { background: #b06bf7; color: #24063f; }
+.rarity-rare { background: #5865f2; color: #fff; }
+.rarity-uncommon { background: #3ba55d; color: #06210f; }
+.rarity-common { background: #4e5058; color: #dcddde; }
+
+body.has-profile-bg .login-card {
+  background: rgba(43, 45, 49, 0.85);
+  backdrop-filter: blur(10px);
+}
+
+.preview-banner {
+  height: 64px;
+  border-radius: 6px;
+  background-size: cover;
+  background-position: center;
+  margin-top: 8px;
+}
+
+.preview-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0 4px;
+}
+
+.preview-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #2b2d31;
+  background: #5865f2;
+  flex-shrink: 0;
+}
+
+.preview-name {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.preview-rarity {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+/* ── Mobile ── */
+@media (max-width: 480px) {
+  .login-card {
+    width: calc(100vw - 32px);
+    padding: 24px 20px;
+  }
+  input {
+    font-size: 16px; /* prevents iOS zoom */
+  }
+}

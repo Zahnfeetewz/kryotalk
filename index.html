@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Kryotalk - Anmelden</title>
+<link rel="stylesheet" href="login.css" />
+</head>
+<body>
+  <div id="login-bg">
+    <img id="login-bg-image" class="hidden" alt="" />
+    <video id="login-bg-video" class="hidden" autoplay loop muted playsinline></video>
+  </div>
+  <div class="login-wrap">
+    <div class="login-card">
+      <h1 id="form-title">Willkommen zurück</h1>
+
+      <div class="tabs">
+        <button class="tab active" id="tab-login">Anmelden</button>
+        <button class="tab" id="tab-register">Registrieren</button>
+      </div>
+
+      <form id="login-form">
+        <label>Benutzername</label>
+        <input type="text" id="login-username" placeholder="dein_name" autocomplete="username" />
+
+        <div id="login-profile-preview" class="hidden">
+          <div id="preview-banner" class="preview-banner"></div>
+          <div class="preview-body">
+            <img id="preview-avatar" class="preview-avatar" src="" alt="" />
+            <div class="preview-name" id="preview-name"></div>
+            <span class="preview-rarity" id="preview-rarity"></span>
+          </div>
+        </div>
+
+        <label>Passwort</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
+
+        <div id="login-2fa-section" class="hidden">
+          <label>Authenticator-Code</label>
+          <input type="text" id="login-2fa-code" placeholder="6-stelliger Code" maxlength="6" autocomplete="one-time-code" style="text-align:center;letter-spacing:6px;font-size:18px" />
+          <p style="font-size:12px;color:var(--text-muted);margin-top:4px;text-align:center">Code aus deiner Authenticator-App eingeben</p>
+        </div>
+
+        <p class="error" id="login-error"></p>
+        <button type="submit" class="primary">Anmelden</button>
+        <p id="forgot-password-link" style="text-align:center;margin-top:12px"><a href="#" id="show-forgot-password" style="color:#5865f2;font-size:13px;text-decoration:none">Passwort vergessen?</a></p>
+      </form>
+
+      <form id="register-form" class="hidden">
+        <label>Benutzername</label>
+        <input type="text" id="reg-username" placeholder="z.B. max, xo, oder t" autocomplete="off" />
+        <p class="hint" id="username-hint"></p>
+
+        <label>E-Mail</label>
+        <input type="email" id="reg-email" placeholder="name@beispiel.de" autocomplete="email" />
+
+        <label>Passwort</label>
+        <input type="password" id="reg-password" placeholder="frei wählbar" autocomplete="new-password" />
+
+        <label>Passwort bestätigen</label>
+        <input type="password" id="reg-password2" placeholder="wiederholen" autocomplete="new-password" />
+
+        <p class="error" id="register-error"></p>
+        <button type="submit" class="primary">Konto erstellen</button>
+      </form>
+    </div>
+
+    <div id="verify-overlay" class="hidden" style="margin-top:0">
+      <div class="login-card">
+        <h2 id="verify-title">E-Mail verifizieren</h2>
+        <p id="verify-desc" style="color:var(--text-muted);font-size:14px;text-align:center;margin-bottom:16px">Gib den 6-stelligen Code ein, den wir an deine E-Mail-Adresse geschickt haben.</p>
+        <p id="verify-email-display" style="text-align:center;font-weight:bold;margin-bottom:16px;color:#5865f2"></p>
+        <input type="text" id="verify-code" placeholder="6-stelliger Code" maxlength="6" style="text-align:center;letter-spacing:6px;font-size:18px" autocomplete="one-time-code" />
+        <p id="verify-dev-code" style="display:none;text-align:center;font-size:13px;color:#faa61a;margin:8px 0;padding:8px;background:rgba(250,166,26,0.1);border-radius:6px"></p>
+        <p class="error" id="verify-error"></p>
+        <button class="primary" id="verify-submit">Verifizieren</button>
+        <div style="text-align:center;margin-top:12px">
+          <button class="secondary" id="verify-resend" style="background:none;border:none;color:#5865f2;cursor:pointer;font-size:13px">Code erneut senden</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="forgot-overlay" class="hidden" style="margin-top:0">
+      <!-- Step 1: Username -->
+      <div id="forgot-step1" class="login-card">
+        <h2>Passwort vergessen?</h2>
+        <p style="color:var(--text-muted);font-size:14px;text-align:center;margin-bottom:16px">Gib deinen Benutzernamen ein und wir senden dir einen Code zum Zuruecksetzen.</p>
+        <label>Benutzername</label>
+        <input type="text" id="forgot-username" placeholder="dein_name" autocomplete="username" />
+        <p class="error" id="forgot-error1"></p>
+        <button class="primary" id="forgot-submit1">Code senden</button>
+        <p style="text-align:center;margin-top:12px"><a href="#" id="forgot-back-login" style="color:#5865f2;font-size:13px;text-decoration:none">Zurueck zum Anmelden</a></p>
+      </div>
+      <!-- Step 2: Code eingeben -->
+      <div id="forgot-step2" class="login-card hidden">
+        <h2>Code eingeben</h2>
+        <p style="color:var(--text-muted);font-size:14px;text-align:center;margin-bottom:8px">Wir haben einen Code an</p>
+        <p id="forgot-email-masked" style="text-align:center;font-weight:bold;margin-bottom:16px;color:#5865f2"></p>
+        <input type="text" id="forgot-code" placeholder="6-stelliger Code" maxlength="6" style="text-align:center;letter-spacing:6px;font-size:18px" autocomplete="one-time-code" />
+        <p id="forgot-dev-code" style="display:none;text-align:center;font-size:13px;color:#faa61a;margin:8px 0;padding:8px;background:rgba(250,166,26,0.1);border-radius:6px"></p>
+        <p class="error" id="forgot-error2"></p>
+        <button class="primary" id="forgot-submit2">Weiter</button>
+        <p style="text-align:center;margin-top:12px"><a href="#" id="forgot-resend-code" style="color:#5865f2;font-size:13px;text-decoration:none">Code erneut senden</a></p>
+      </div>
+      <!-- Step 3: Neues Passwort -->
+      <div id="forgot-step3" class="login-card hidden">
+        <h2>Neues Passwort</h2>
+        <p style="color:var(--text-muted);font-size:14px;text-align:center;margin-bottom:16px">Gib dein neues Passwort ein.</p>
+        <label>Neues Passwort</label>
+        <input type="password" id="forgot-new-password" placeholder="Neues Passwort" autocomplete="new-password" />
+        <label>Passwort bestaetigen</label>
+        <input type="password" id="forgot-new-password2" placeholder="Wiederholen" autocomplete="new-password" />
+        <p class="error" id="forgot-error3"></p>
+        <button class="primary" id="forgot-submit3">Passwort aendern</button>
+      </div>
+      <!-- Step 4: Erfolg -->
+      <div id="forgot-step4" class="login-card hidden">
+        <div style="text-align:center">
+          <div style="font-size:48px;margin-bottom:16px">&#10003;</div>
+          <h2>Passwort geaendert!</h2>
+          <p style="color:var(--text-muted);font-size:14px;margin:8px 0 20px">Du kannst dich jetzt mit dem neuen Passwort anmelden.</p>
+          <button class="primary" id="forgot-goto-login">Zum Anmelden</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="api.js"></script>
+  <script src="translations.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('tab-login').textContent = t('login');
+      document.getElementById('tab-register').textContent = t('register');
+      var labels = document.querySelectorAll('#login-form label');
+      if (labels[0]) labels[0].textContent = t('username');
+      if (labels[1]) labels[1].textContent = t('password');
+      document.querySelector('#login-2fa-section label').textContent = t('twoFactorAuth');
+      document.getElementById('login-2fa-code').placeholder = t('sixDigitCode');
+      document.querySelector('#login-2fa-section p').textContent = t('enterCodeFromApp');
+      document.querySelector('#login-form .primary').textContent = t('login');
+      var regLabels = document.querySelectorAll('#register-form label');
+      if (regLabels[0]) regLabels[0].textContent = t('username');
+      if (regLabels[1]) regLabels[1].textContent = t('email');
+      if (regLabels[2]) regLabels[2].textContent = t('passwort');
+      if (regLabels[3]) regLabels[3].textContent = t('passwortBestaetigen');
+      document.getElementById('reg-email').placeholder = t('emailPlaceholder');
+      document.getElementById('reg-password').placeholder = t('freiWaehlbar');
+      document.getElementById('reg-password2').placeholder = t('wiederholen');
+      document.querySelector('#register-form .primary').textContent = t('createAccount');
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>if(typeof emailjs!=='undefined'){emailjs.init('5WuF8cFbJ5zVA9r24');}</script>
+  <script src="login.js"></script>
+</body>
+</html>
