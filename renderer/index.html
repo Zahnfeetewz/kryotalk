@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kryotalk</title>
+  <style>
+    :root {
+      --bg-primary: #313338;
+      --bg-secondary: #2b2d31;
+      --bg-tertiary: #1e1f22;
+      --bg-accent: #5865f2;
+      --text-primary: #f2f3f5;
+      --text-secondary: #b5bac1;
+      --text-muted: #949ba4;
+      --green: #57f287;
+      --yellow: #fee75c;
+      --red: #ed4245;
+      --pink: #eb459e;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+      background: var(--bg-tertiary); color: var(--text-primary); line-height: 1.6; overflow-x: hidden;
+    }
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(30, 31, 34, 0.85); backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 24px; height: 56px;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; color: var(--text-primary); }
+    .nav-brand svg { color: var(--bg-accent); }
+    .nav-links { display: flex; gap: 24px; }
+    .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.15s; }
+    .nav-links a:hover { color: var(--text-primary); }
+    .nav-actions { display: flex; gap: 10px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;
+      text-decoration: none; transition: all 0.2s; cursor: pointer; border: none;
+    }
+    .btn-primary { background: var(--bg-accent); color: white; }
+    .btn-primary:hover { background: #4752c4; transform: translateY(-1px); }
+    .btn-ghost { background: transparent; color: var(--text-secondary); }
+    .btn-ghost:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+    .btn-outline { background: transparent; color: var(--text-primary); border: 1px solid rgba(255,255,255,0.2); }
+    .btn-outline:hover { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.05); }
+    .btn-lg { padding: 12px 28px; font-size: 16px; border-radius: 24px; }
+    .hero {
+      position: relative; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      text-align: center; padding: 120px 24px 80px;
+    }
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(88,101,242,0.2) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 50%, rgba(235,69,158,0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 20% 80%, rgba(87,242,135,0.06) 0%, transparent 50%);
+    }
+    .hero-content { position: relative; z-index: 1; max-width: 700px; }
+    .hero h1 {
+      font-size: 72px; font-weight: 800; line-height: 1.1;
+      background: linear-gradient(135deg, var(--bg-accent), var(--pink), var(--green));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin-bottom: 16px;
+    }
+    .hero-sub { font-size: 22px; color: var(--text-secondary); margin-bottom: 8px; }
+    .hero-desc { font-size: 16px; color: var(--text-muted); margin-bottom: 32px; }
+    .hero-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .section { padding: 80px 24px; }
+    .section-dark { background: var(--bg-secondary); }
+    .section-inner { max-width: 1100px; margin: 0 auto; }
+    .section h2 { font-size: 36px; font-weight: 700; text-align: center; margin-bottom: 8px; }
+    .section-sub { text-align: center; color: var(--text-secondary); font-size: 16px; margin-bottom: 48px; }
+    .center { text-align: center; }
+    .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+    .feature-grid-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .feature-card {
+      background: var(--bg-secondary); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px; padding: 24px; transition: transform 0.2s, border-color 0.2s;
+    }
+    .feature-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.12); }
+    .feature-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; margin-bottom: 16px;
+    }
+    .feature-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .feature-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
+    .split { display: flex; align-items: center; gap: 60px; }
+    .split-reverse { flex-direction: row-reverse; }
+    .split-text { flex: 1; }
+    .split-text h2 { font-size: 32px; text-align: left; margin-bottom: 16px; }
+    .split-text p { color: var(--text-secondary); font-size: 15px; margin-bottom: 20px; }
+    .split-visual { flex: 1; display: flex; justify-content: center; }
+    .checklist { list-style: none; }
+    .checklist li { padding: 6px 0; font-size: 14px; color: var(--text-secondary); display: flex; align-items: center; gap: 10px; }
+    .checklist li::before {
+      content: ''; width: 18px; height: 18px; border-radius: 50%; background: var(--green);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: center; background-size: 12px;
+    }
+    .mockup-chat { background: var(--bg-tertiary); border-radius: 12px; padding: 20px; width: 100%; max-width: 340px; border: 1px solid rgba(255,255,255,0.06); }
+    .mockup-msg { display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px; }
+    .mockup-author { font-size: 14px; font-weight: 600; }
+    .mockup-time { font-size: 11px; color: var(--text-muted); }
+    .mockup-msg-text { font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; }
+    .mockup-msg-img { font-size: 48px; line-height: 1; background: rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; display: inline-block; margin-bottom: 12px; }
+    .mockup-call { background: var(--bg-tertiary); border-radius: 16px; padding: 32px; text-align: center; width: 100%; max-width: 280px; border: 1px solid rgba(255,255,255,0.06); }
+    .mockup-call-avatar { font-size: 64px; margin-bottom: 12px; width: 80px; height: 80px; border-radius: 50%; background: var(--bg-accent); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
+    .mockup-call-name { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+    .mockup-call-status { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+    .mockup-call-controls { display: flex; gap: 12px; justify-content: center; }
+    .mockup-ctrl { width: 44px; height: 44px; border-radius: 50%; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; font-size: 18px; border: 1px solid rgba(255,255,255,0.08); }
+    .mockup-admin { background: var(--bg-tertiary); border-radius: 12px; padding: 20px; width: 100%; max-width: 300px; border: 1px solid rgba(255,255,255,0.06); }
+    .mockup-admin-header { font-size: 16px; font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .mockup-admin-stat { font-size: 14px; color: var(--text-secondary); padding: 6px 0; }
+    .mockup-admin-bar { height: 8px; background: var(--bg-secondary); border-radius: 4px; margin-top: 8px; overflow: hidden; }
+    .mockup-admin-bar div { height: 100%; border-radius: 4px; }
+    .tech-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; max-width: 800px; margin: 0 auto; }
+    .tech-item { background: var(--bg-secondary); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 20px; font-size: 14px; font-weight: 500; color: var(--text-secondary); }
+    .download-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; max-width: 900px; margin: 0 auto; }
+    .download-card { background: var(--bg-primary); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 28px; text-align: center; transition: border-color 0.2s, transform 0.2s; }
+    .download-card:hover { border-color: rgba(88,101,242,0.4); transform: translateY(-2px); }
+    .download-icon { font-size: 40px; margin-bottom: 12px; }
+    .download-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .download-card p { font-size: 14px; color: var(--text-secondary); }
+    .footer { border-top: 1px solid rgba(255,255,255,0.06); padding: 40px 24px; background: var(--bg-tertiary); }
+    .footer-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+    .footer-brand { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 700; }
+    .footer-brand svg { color: var(--bg-accent); }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 13px; transition: color 0.15s; }
+    .footer-links a:hover { color: var(--text-primary); }
+    .footer-copy { font-size: 13px; color: var(--text-muted); }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .hero h1 { font-size: 48px; }
+      .hero-sub { font-size: 18px; }
+      .split, .split-reverse { flex-direction: column; gap: 32px; }
+      .split-text h2, .split-text { text-align: center; }
+      .checklist li { justify-content: center; }
+      .section h2 { font-size: 28px; }
+      .feature-grid { grid-template-columns: 1fr; }
+      .footer-inner { flex-direction: column; text-align: center; }
+    }
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 36px; }
+      .hero-buttons { flex-direction: column; align-items: center; }
+      .btn-lg { width: 100%; }
+      .nav-inner { padding: 8px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-inner">
+      <div class="nav-brand">
+        <svg width="28" height="20" viewBox="0 0 28 20"><path fill="currentColor" d="M23.7 1.7A23.3 23.3 0 0017.9.0a.1.1 0 00-.1.0 16.2 16.2 0 00-.7 1.5 21.4 21.4 0 00-6.4 0A14.9 14.9 0 0010 .0a.1.1 0 00-.1.0A23.2 23.2 0 004.1 1.7a.1.1 0 00-.1.0C.6 7.0-.4 12.2.1 17.3a.1.1 0 000 .1 23.4 23.4 0 007.1 3.6.1.1 0 00.1-.0c.5-.7 1-1.4 1.4-2.2a.1.1 0 000-.1 15.4 15.4 0 01-2.4-1.2.1.1 0 000-.1c.2-.1.3-.2.5-.4a.1.1 0 000-.1c4.6 2.1 9.6 2.1 14.2 0a.1.1 0 000 .1l.5.4a.1.1 0 000 .1c-.7.5-1.5.9-2.4 1.2a.1.1 0 000 .1c.4.8.9 1.5 1.4 2.2a.1.1 0 00.1.0 23.3 23.3 0 007.1-3.6.1.1 0 000-.1c.6-6.8-.6-12.7-4.5-17.4a.1.1 0 000-.1zM9.3 14.2c-2.2 0-4-2-4-4.5s1.8-4.5 4-4.5 4.1 2 4 4.5c0 2.5-1.8 4.5-4 4.5zm14.8 0c-2.2 0-4-2-4-4.5s1.8-4.5 4-4.5 4.1 2 4 4.5c0 2.5-1.8 4.5-4 4.5z"/></svg>
+        <span>Kryotalk</span>
+      </div>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#chat">Chat</a>
+        <a href="#voice">Sprache & Video</a>
+        <a href="#admin">Admin</a>
+        <a href="#security">Sicherheit</a>
+        <a href="#download">Download</a>
+      </div>
+      <div class="nav-actions">
+        <a href="#download" class="btn btn-ghost">Anmelden</a>
+        <a href="#download" class="btn btn-primary">Registrieren</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <h1>Kryotalk</h1>
+      <p class="hero-sub">Deine eigene Plattform fuer Text, Sprache und Video.</p>
+      <p class="hero-desc">Gespeichert auf deinem Rechner. Keine Cloud, kein Abo, kein Drittanbieter.</p>
+      <div class="hero-buttons">
+        <a href="#download" class="btn btn-primary btn-lg">Jetzt starten</a>
+        <a href="#features" class="btn btn-outline btn-lg">Features entdecken</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="features">
+    <div class="section-inner">
+      <h2>Alles was du brauchst</h2>
+      <p class="section-sub">Volle Kontrolle. Keine Kompromisse.</p>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#5865f2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+          </div>
+          <h3>Echtzeit-Chat</h3>
+          <p>Textnachrichten mit Emojis, Dateianhaengen und Bildern. Nachrichten werden sofort zugestellt.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#57f287">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3zM19 10v2a7 7 0 01-14 0v-2H3v2a9 9 0 008 8.94V23h2v-2.06A9 9 0 0021 12v-2h-2z"/></svg>
+          </div>
+          <h3>Sprachanrufe</h3>
+          <p>WebRTC-basierte Sprachanrufe mit Echo-Reduktion, Noise-Suppression und automatischer Verstaerkung.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#eb459e">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+          </div>
+          <h3>Videocalls</h3>
+          <p>Videoanrufe mit HD-Aufloesung bis 1080p/60fps. Kamera waehlen und konfigurieren.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#fee75c">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#000"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM5 15l3.5-4.5 2.5 3 3.5-4.5L19 15H5z"/></svg>
+          </div>
+          <h3>Bildschirmfreigabe</h3>
+          <p>Teile deinen Bildschirm in Anrufen mit Loopback-Audio und Cursor-Anzeige.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#ed4245">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          </div>
+          <h3>Sicherheit</h3>
+          <p>Zwei-Faktor-Authentifizierung (2FA), E-Mail-Verifizierung, Passwort-Zuruecksetzen und IP-Tracking.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#5865f2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          </div>
+          <h3>Server & Community</h3>
+          <p>Erstelle eigene Server mit Kanalen, Rollen und Berechtigungen. Wie Discord, aber lokal.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#57f287">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+          </div>
+          <h3>Rollen & Admin</h3>
+          <p>Admin-Panel mit Benutzerverwaltung, Rollenvergabe, Banns, Server-Einstellungen und mehr.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#eb459e">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+          </div>
+          <h3>DMs & Freunde</h3>
+          <p> Direktnachrichten, Freunde hinzufuegen, Freundschaftsanfragen und Online-Status.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-dark" id="chat">
+    <div class="section-inner">
+      <div class="split">
+        <div class="split-text">
+          <h2>Chat so wie du es kennst</h2>
+          <p>Sende Textnachrichten, Bilder und Dateien in Echtzeit. Nachrichten werden zuverlaessig gespeichert und bleiben auch nach Neustarts erhalten.</p>
+          <ul class="checklist">
+            <li>Echtzeit-Zustellung via Socket.io</li>
+            <li>Bilder und Dateien per Drag & Drop</li>
+            <li>Nachrichten-Persistenz mit Backup</li>
+            <li>Emoji-Unterstuetzung</li>
+            <li>Nachrichten-Gruppierung nach Autor</li>
+          </ul>
+        </div>
+        <div class="split-visual">
+          <div class="mockup-chat">
+            <div class="mockup-msg"><span class="mockup-author" style="color:#5865f2">Max</span><span class="mockup-time">14:23</span></div>
+            <div class="mockup-msg-text">Hey, wie geht's euch?</div>
+            <div class="mockup-msg"><span class="mockup-author" style="color:#57f287">Anna</span><span class="mockup-time">14:24</span></div>
+            <div class="mockup-msg-text">Super! Hab das neue Feature getestet</div>
+            <div class="mockup-msg-img">&#127912;</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="voice">
+    <div class="section-inner">
+      <div class="split split-reverse">
+        <div class="split-text">
+          <h2>Sprache & Video</h2>
+          <p>WebRTC-basierte Anrufe mit echter Audio-Qualitaet. Sprach- und Videocalls direkt im Browser oder in der Electron-App.</p>
+          <ul class="checklist">
+            <li>Sprachanrufe mit Echo-Reduktion</li>
+            <li>Videocalls bis 1080p/60fps</li>
+            <li>Bildschirmfreigabe mit Audio</li>
+            <li>Mikrofon-Test wie bei Discord</li>
+            <li>Kamera-Vorschau in den Einstellungen</li>
+            <li>Push-to-Talk & Voice Activity</li>
+            <li>Input/Output-Geraete waehlen</li>
+            <li>Noise Suppression & Auto Gain</li>
+          </ul>
+        </div>
+        <div class="split-visual">
+          <div class="mockup-call">
+            <div class="mockup-call-avatar">&#128100;</div>
+            <div class="mockup-call-name">Anna</div>
+            <div class="mockup-call-status">Verbunden &bull; 12:34</div>
+            <div class="mockup-call-controls">
+              <div class="mockup-ctrl">&#128266;</div>
+              <div class="mockup-ctrl">&#128247;</div>
+              <div class="mockup-ctrl" style="background:#ed4245">&#128222;</div>
+              <div class="mockup-ctrl">&#128187;</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-dark" id="admin">
+    <div class="section-inner">
+      <div class="split">
+        <div class="split-text">
+          <h2>Admin-Panel</h2>
+          <p>Volle Kontrolle ueber deinen Server. Verwalte Benutzer, Server und Einstellungen mit einem leistungsstarken Admin-Dashboard.</p>
+          <ul class="checklist">
+            <li>Benutzer verwalten (bannen, loeschen, Rollen)</li>
+            <li>Server erstellen und verwalten</li>
+            <li>Admin-Passwort per bcrypt gehasht</li>
+            <li>IP-Tracking aller Anmeldungen</li>
+            <li>2FA-Setup mit Authenticator App</li>
+            <li>System-Statistiken</li>
+          </ul>
+        </div>
+        <div class="split-visual">
+          <div class="mockup-admin">
+            <div class="mockup-admin-header">Admin Panel</div>
+            <div class="mockup-admin-stat">12 Benutzer</div>
+            <div class="mockup-admin-stat">4 Server</div>
+            <div class="mockup-admin-stat">1.248 Nachrichten</div>
+            <div class="mockup-admin-bar"><div style="width:65%;background:#5865f2"></div></div>
+            <div class="mockup-admin-bar"><div style="width:40%;background:#57f287"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="security">
+    <div class="section-inner">
+      <h2>Sicherheit und Privatsphaere</h2>
+      <p class="section-sub">Deine Daten bleiben bei dir.</p>
+      <div class="feature-grid feature-grid-3">
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#ed4245">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+          </div>
+          <h3>Zwei-Faktor-Authentifizierung</h3>
+          <p>2FA mit TOTP-Authenticator App (Google Authenticator, Authy, etc.). QR-Code zum Scannen.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#5865f2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+          </div>
+          <h3>E-Mail-Verifizierung</h3>
+          <p>Registrierung nur mit gueltiger E-Mail-Adresse. 6-stelliger Verifizierungscode per SMTP.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#57f287">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+          </div>
+          <h3>Lokale Datenbank</h3>
+          <p>Alles wird lokal gespeichert. Kein externer Server, keine Cloud. DB mit Backup und Korruptionsschutz.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-dark" id="download">
+    <div class="section-inner center">
+      <h2>Bereit loszulegen?</h2>
+      <p class="section-sub">Kryotalk ist eine lokale App — starte sie auf deinem Rechner.</p>
+      <div class="download-options">
+        <div class="download-card">
+          <div class="download-icon">&#128187;</div>
+          <h3>Desktop App</h3>
+          <p>Electron-App fuer Windows, Mac und Linux</p>
+          <code style="font-size:12px;color:var(--text-muted);background:var(--bg-tertiary);padding:4px 8px;border-radius:4px;display:inline-block;margin-top:8px">npm start</code>
+        </div>
+        <div class="download-card">
+          <div class="download-icon">&#127760;</div>
+          <h3>Web App</h3>
+          <p>Im Browser oeffnen via Cloudflare Tunnel</p>
+          <code style="font-size:12px;color:var(--text-muted);background:var(--bg-tertiary);padding:4px 8px;border-radius:4px;display:inline-block;margin-top:8px">npm run tunnel</code>
+        </div>
+        <div class="download-card">
+          <div class="download-icon">&#128225;</div>
+          <h3>Cloudflare Tunnel</h3>
+          <p>Weltweit zugnglich mit Quick Tunnel</p>
+          <code style="font-size:12px;color:var(--text-muted);background:var(--bg-tertiary);padding:4px 8px;border-radius:4px;display:inline-block;margin-top:8px">cloudflared tunnel</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="tech">
+    <div class="section-inner center">
+      <h2>Technologien</h2>
+      <p class="section-sub">Gebaut mit modernen Web-Technologien</p>
+      <div class="tech-grid">
+        <div class="tech-item">Electron</div>
+        <div class="tech-item">Node.js</div>
+        <div class="tech-item">Express.js</div>
+        <div class="tech-item">Socket.io</div>
+        <div class="tech-item">WebRTC</div>
+        <div class="tech-item">bcrypt</div>
+        <div class="tech-item">SQLite</div>
+        <div class="tech-item">TOTP (2FA)</div>
+        <div class="tech-item">nodemailer</div>
+        <div class="tech-item">Cloudflare</div>
+        <div class="tech-item">HTML5</div>
+        <div class="tech-item">CSS3</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <svg width="24" height="18" viewBox="0 0 28 20"><path fill="currentColor" d="M23.7 1.7A23.3 23.3 0 0017.9.0a.1.1 0 00-.1.0 16.2 16.2 0 00-.7 1.5 21.4 21.4 0 00-6.4 0A14.9 14.9 0 0010 .0a.1.1 0 00-.1.0A23.2 23.2 0 004.1 1.7a.1.1 0 00-.1.0C.6 7.0-.4 12.2.1 17.3a.1.1 0 000 .1 23.4 23.4 0 007.1 3.6.1.1 0 00.1-.0c.5-.7 1-1.4 1.4-2.2a.1.1 0 000-.1 15.4 15.4 0 01-2.4-1.2.1.1 0 000-.1c.2-.1.3-.2.5-.4a.1.1 0 000-.1c4.6 2.1 9.6 2.1 14.2 0a.1.1 0 000 .1l.5.4a.1.1 0 000 .1c-.7.5-1.5.9-2.4 1.2a.1.1 0 000 .1c.4.8.9 1.5 1.4 2.2a.1.1 0 00.1.0 23.3 23.3 0 007.1-3.6.1.1 0 000-.1c.6-6.8-.6-12.7-4.5-17.4a.1.1 0 000-.1zM9.3 14.2c-2.2 0-4-2-4-4.5s1.8-4.5 4-4.5 4.1 2 4 4.5c0 2.5-1.8 4.5-4 4.5zm14.8 0c-2.2 0-4-2-4-4.5s1.8-4.5 4-4.5 4.1 2 4 4.5c0 2.5-1.8 4.5-4 4.5z"/></svg>
+        <span>Kryotalk</span>
+      </div>
+      <div class="footer-links">
+        <a href="#features">Features</a>
+        <a href="#chat">Chat</a>
+        <a href="#voice">Sprache & Video</a>
+        <a href="#admin">Admin</a>
+        <a href="#security">Sicherheit</a>
+      </div>
+      <div class="footer-copy">&copy; 2026 Kryotalk</div>
+    </div>
+  </footer>
+</body>
+</html>

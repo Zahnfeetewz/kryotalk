@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Kryotalk</title>
+<link rel="stylesheet" href="app.css" />
+</head>
+<body data-theme="dark">
+
+  <div id="app-background">
+    <img id="bg-image" alt="" />
+    <video id="bg-video" autoplay loop muted playsinline></video>
+    <div id="bg-overlay"></div>
+  </div>
+
+  <div id="email-verify-banner" class="hidden" style="position:fixed;top:0;left:0;right:0;z-index:999;background:#faa61a;color:#000;padding:10px 20px;text-align:center;font-size:14px;align-items:center;justify-content:center;gap:12px">
+    <span id="verify-banner-text">Deine E-Mail-Adresse ist nicht verifiziert.</span>
+    <button id="verify-banner-btn" style="background:#000;color:#fff;border:none;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:13px;font-weight:bold">Verifizieren</button>
+    <button id="verify-banner-dismiss" style="background:none;border:none;color:#000;cursor:pointer;font-size:16px;margin-left:4px">&times;</button>
+  </div>
+
+  <div class="layout">
+    <!-- Server-Rail (linke Spalte mit Server-Icons) -->
+    <div class="server-rail" id="server-rail">
+      <div class="server-icon home-icon active" id="home-btn" title="Startseite">🏠</div>
+      <div class="server-icon dm-icon" id="dm-btn" title="Direktnachrichten">💬</div>
+      <div class="server-add" id="add-server" title="Server erstellen">+</div>
+    </div>
+
+    <!-- Channel-Liste / DM-Liste -->
+    <div class="channel-list" id="channel-list">
+      <div class="server-header" id="server-header">Startseite</div>
+
+      <div id="server-channels">
+        <div class="channel-group" id="channel-group"></div>
+      </div>
+
+      <div id="dm-list" class="hidden">
+        <div class="dm-group">
+          <div class="friends-header">
+            <button class="friends-tab active" id="tab-dms">DMs</button>
+            <button class="friends-tab" id="tab-friends">Freunde</button>
+          </div>
+          <div id="friends-section" class="hidden">
+            <div class="friends-add-row">
+              <input class="friends-add-input" id="friends-add-input" placeholder="Benutzername..." />
+              <button class="friends-add-btn" id="friends-add-btn">Hinzufuegen</button>
+            </div>
+            <div id="friends-requests-list"></div>
+            <div id="friends-list"></div>
+          </div>
+          <div id="dm-section">
+            <div class="group-label">Direktnachrichten</div>
+            <div id="dm-items"></div>
+            <button class="dm-new-btn" id="dm-new">+ Neue Nachricht</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:1"></div>
+
+      <!-- User-Panel unten (Discord-Style) -->
+      <div class="user-panel" id="user-panel">
+        <div style="position:relative;flex-shrink:0">
+          <img id="user-avatar" class="user-avatar" src="" alt="" />
+          <div class="user-status-dot" id="user-status-dot" style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;border-radius:50%;border:3px solid var(--bg-rail)"></div>
+        </div>
+        <div class="user-meta">
+          <div class="user-name" id="user-name">—</div>
+          <div class="user-status-text" id="user-status-text" style="font-size:11px;color:var(--text-muted)"></div>
+        </div>
+        <div class="user-panel-actions">
+          <button class="user-panel-btn" id="user-panel-mic" title="Mikrofon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><line x1="12" y1="19" x2="12" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="8" y1="23" x2="16" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+          <button class="user-panel-btn" id="user-panel-deafen" title="Kopfhoerer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 18v-6a9 9 0 0 1 18 0v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="1" y="15" width="4" height="6" rx="1" fill="currentColor"/><rect x="19" y="15" width="4" height="6" rx="1" fill="currentColor"/></svg>
+          </button>
+        </div>
+        <button id="open-admin-panel" title="Admin-Panel" class="user-panel-btn" style="display:none;color:#da373c">🛡</button>
+        <button id="open-settings" title="Einstellungen" class="user-panel-btn">⚙</button>
+      </div>
+    </div>
+
+    <!-- Chat / Hauptbereich -->
+    <div class="chat-area">
+      <div class="chat-header" id="chat-header">
+        <button class="mobile-menu-btn" id="mobile-menu-btn">☰</button>
+        <span id="current-channel"># allgemein</span>
+        <div class="chat-header-actions">
+          <div id="dm-call-actions" style="display:none">
+            <button class="dm-call-btn" id="dm-call-voice" title="Anrufen"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
+          </div>
+          <button class="header-btn" id="toggle-members" title="Mitgliederliste">👥</button>
+          <button class="header-btn" id="server-settings-btn" title="Server-Einstellungen">⚙</button>
+        </div>
+      </div>
+
+      <div class="messages" id="messages"></div>
+
+      <div class="chat-input-wrapper" id="chat-input-wrapper">
+        <div class="chat-input-container">
+          <button type="button" class="chat-input-icon" id="file-upload-btn" title="Datei anhaengen">
+            <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.00098C6.486 2.00098 2 6.48698 2 12.001C2 17.515 6.486 22.001 12 22.001C17.514 22.001 22 17.515 22 12.001C22 6.48698 17.514 2.00098 12 2.00098ZM17 13.001H13V17.001H11V13.001H7V11.001H11V7.00098H13V11.001H17V13.001Z"/></svg>
+          </button>
+          <div id="attachment-preview" class="msg-attachment-preview"></div>
+          <input type="text" id="message-input" class="chat-input" placeholder="Nachricht an #kanal" autocomplete="off" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Bar (always visible on mobile) -->
+  <div id="mobile-bottom-bar" class="mobile-bottom-bar">
+    <div class="mobile-bottom-left" id="mobile-bottom-user">
+      <img id="mobile-user-avatar" class="mobile-user-avatar" src="" alt="" />
+      <div class="mobile-user-meta">
+        <div class="mobile-user-name" id="mobile-user-name">—</div>
+      </div>
+    </div>
+    <div class="mobile-bottom-actions">
+      <button id="mobile-open-settings" class="mobile-bottom-btn" title="Einstellungen">⚙</button>
+    </div>
+  </div>
+
+  <!-- Discord-Style Settings Overlay (Fullsreen) -->
+  <div id="settings-overlay" class="hidden" style="position:fixed;inset:0;z-index:200;display:flex;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)">
+    <div style="width:218px;background:rgba(43,45,49,0.9);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;padding:60px 6px 60px 20px;overflow-y:auto">
+      <div id="settings-nav" style="width:192px"></div>
+    </div>
+    <div id="settings-content" style="flex:1;overflow-y:auto;padding:60px 40px 80px"><div id="settings-content-inner" style="max-width:740px;margin:0 auto"></div></div>
+    <div id="settings-save-bar" style="display:none;position:absolute;bottom:0;left:0;right:0;background:rgba(30,31,34,0.95);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:16px 40px;align-items:center;justify-content:center;gap:16px;z-index:210;border-top:1px solid rgba(255,255,255,0.06)">
+      <span id="settings-save-bar-text" style="font-size:13px;color:var(--text-muted)">Änderungen nicht gespeichert!</span>
+      <button id="settings-reset-pending" style="padding:6px 16px;border:none;background:none;color:var(--text-muted);font-size:13px;cursor:pointer;border-radius:4px">Zurücksetzen</button>
+      <button id="settings-save-pending" style="padding:6px 24px;border:none;background:#5865f2;color:#fff;font-size:13px;font-weight:600;cursor:pointer;border-radius:4px">Änderungen speichern</button>
+    </div>
+    <button id="close-settings" style="position:absolute;right:40px;top:60px;width:36px;height:36px;border-radius:50%;border:2px solid var(--text-muted);background:none;color:var(--text-muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+  </div>
+
+  <!-- Admin Panel Modal -->
+  <div class="modal-overlay hidden" id="admin-overlay" style="background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)">
+    <div class="modal admin-modal">
+      <div class="modal-header">
+        <h2>🛡 Admin-Panel</h2>
+        <button id="close-admin">✕</button>
+      </div>
+      <div class="modal-body" id="admin-body">
+        <!-- Passwort-Formular oder Admin-Inhalt -->
+        <div id="admin-login-form">
+          <label>Admin-Passwort</label>
+          <input type="password" id="admin-password" placeholder="Passwort eingeben…" />
+          <p class="error" id="admin-error"></p>
+          <button class="primary" id="admin-login-btn">Anmelden</button>
+          <p class="hint hidden" id="admin-first-hint">Erstmalig: Passwort wird gesetzt.</p>
+        </div>
+        <div id="admin-content" class="hidden">
+          <div class="admin-search-row">
+            <input class="admin-search" id="admin-search" placeholder="Nutzer suchen…" />
+          </div>
+          <div id="admin-user-count" style="font-size:13px;color:var(--text-muted);margin-bottom:12px"></div>
+          <div class="admin-user-list" id="admin-user-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Server erstellen Modal -->
+  <div class="modal-overlay hidden" id="create-server-overlay" style="background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)">
+    <div class="modal" style="width:420px">
+      <div class="modal-header">
+        <h2>Server hinzufuegen</h2>
+        <button id="close-create-server">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex;gap:12px;margin-bottom:16px">
+          <button class="primary" id="show-create-server" style="flex:1;padding:14px">Neuen Server erstellen</button>
+          <button class="primary" id="show-join-server" style="flex:1;padding:14px">Server beitreten</button>
+        </div>
+        <div id="create-server-form" class="hidden">
+          <label>Servername</label>
+          <input type="text" id="new-server-name" placeholder="Mein Server" />
+          <p class="error" id="create-server-error"></p>
+          <button class="primary" id="create-server-btn">Erstellen</button>
+        </div>
+        <div id="join-server-form" class="hidden">
+          <label>Invite-Code eingeben</label>
+          <input type="text" id="join-server-code" placeholder="z.B. A1B2C3D4" style="text-transform:uppercase;letter-spacing:2px" maxlength="8" />
+          <p class="error" id="join-server-error"></p>
+          <button class="primary" id="join-server-btn">Beitreten</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DM-Neu Modal -->
+  <div class="modal-overlay hidden" id="dm-new-overlay" style="background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)">
+    <div class="modal" style="width:380px">
+      <div class="modal-header">
+        <h2>Neue Direktnachricht</h2>
+        <button id="close-dm-new">✕</button>
+      </div>
+      <div class="modal-body">
+        <label>Benutzername</label>
+        <input type="text" id="dm-target-username" placeholder="Benutzername…" />
+        <p class="error" id="dm-new-error"></p>
+        <button class="primary" id="dm-new-btn">Nachricht senden</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Server-Einstellungen Modal -->
+  <div class="server-settings-overlay hidden" id="server-settings-overlay">
+    <div class="server-settings-sidebar">
+      <div class="server-settings-nav" id="ss-nav"></div>
+      <div class="ss-nav-exit" id="close-server-settings">
+        <div class="ss-nav-exit-icon">✕</div>
+        <div class="ss-nav-exit-text">Schliessen</div>
+      </div>
+    </div>
+    <div class="server-settings-content">
+      <div class="server-settings-content-inner" id="server-settings-body"></div>
+    </div>
+  </div>
+
+  <div id="email-verify-overlay" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:center;justify-content:center">
+    <div style="background:#2b2d31;border-radius:12px;padding:32px;min-width:400px;max-width:480px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.5)">
+      <div style="width:80px;height:80px;border-radius:50%;background:#5865f2;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:36px">📧</div>
+      <h2 style="color:#fff;margin:0 0 8px">E-Mail verifizieren</h2>
+      <p style="color:#b5bac1;font-size:14px;margin:0 0 16px">Gib den 6-stelligen Code ein, den wir an deine E-Mail geschickt haben.</p>
+      <p id="app-verify-email" style="font-weight:bold;color:#5865f2;margin:0 0 16px"></p>
+      <input type="text" id="app-verify-code" placeholder="6-stelliger Code" maxlength="6" style="text-align:center;letter-spacing:6px;font-size:18px;background:#1e1f22;border:1px solid #1e1f22;color:#fff;padding:12px;border-radius:6px;width:100%;box-sizing:border-box;outline:none" autocomplete="one-time-code" />
+      <p id="app-verify-dev-code" style="display:none;font-size:13px;color:#faa61a;margin:12px 0;padding:8px;background:rgba(250,166,26,0.1);border-radius:6px"></p>
+      <p id="app-verify-error" style="color:#fa777c;font-size:13px;margin:8px 0;min-height:18px"></p>
+      <button id="app-verify-submit" style="width:100%;padding:12px;background:#5865f2;color:#fff;border:none;border-radius:6px;font-size:16px;cursor:pointer;font-weight:bold;margin-top:8px;pointer-events:auto">Verifizieren</button>
+      <div style="margin-top:12px;display:flex;justify-content:center;gap:16px">
+        <button id="app-verify-resend" style="background:none;border:none;color:#5865f2;cursor:pointer;font-size:13px">Code erneut senden</button>
+        <button id="app-verify-logout" style="background:none;border:none;color:#fa777c;cursor:pointer;font-size:13px">Abmelden</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Call Overlays ── -->
+  <div id="call-incoming-overlay" class="call-overlay" style="display:none">
+    <div class="call-overlay-center">
+      <div id="call-incoming-avatar" class="call-avatar-lg"><span>📞</span></div>
+      <h2 id="call-incoming-name" class="call-partner-name"></h2>
+      <p id="call-incoming-type" class="call-type-label"></p>
+      <div class="call-incoming-actions">
+        <button onclick="rejectCall()" class="call-action-btn call-decline" title="Ablehnen">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 2.59 3.4z" fill="currentColor" transform="rotate(135 12 12)"/></svg>
+        </button>
+        <button onclick="acceptCall()" class="call-action-btn call-accept" title="Annehmen">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="call-outgoing-overlay" class="call-overlay" style="display:none">
+    <div class="call-overlay-center">
+      <div id="call-outgoing-avatar" class="call-avatar-lg call-pulse"><span>📞</span></div>
+      <h2 id="call-outgoing-name" class="call-partner-name"></h2>
+      <p id="call-outgoing-type" class="call-type-label"></p>
+      <p class="call-sub-label">Verbinde...</p>
+      <button onclick="endCall()" class="call-action-btn call-decline" title="Beenden" style="margin-top:24px">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 2.59 3.4z" fill="currentColor" transform="rotate(135 12 12)"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="call-active-overlay" class="call-overlay call-active-overlay" style="display:none">
+    <div class="call-active-header">
+      <span id="call-active-name" class="call-active-header-name"></span>
+      <span id="call-active-timer" class="call-active-header-timer">00:00</span>
+    </div>
+    <div class="call-active-main">
+      <video id="call-remote-video" autoplay playsinline class="call-remote-video" style="display:none"></video>
+      <div id="call-audio-bg" class="call-audio-bg" style="display:none">
+        <div id="call-audio-avatar" class="call-avatar-lg"><span>👤</span></div>
+        <h2 id="call-audio-name" class="call-partner-name"></h2>
+      </div>
+      <video id="call-local-video" autoplay playsinline muted class="call-local-pip" style="display:none"></video>
+    </div>
+    <div class="call-controls-bar">
+      <button id="call-btn-mute" onclick="toggleMute()" class="call-ctrl-btn" title="Mikrofon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" fill="currentColor"/><path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="19" x2="12" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="8" y1="23" x2="16" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <button id="call-btn-camera" onclick="toggleCamera()" class="call-ctrl-btn" title="Kamera">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M23 7l-7 5 7 5V7z" fill="currentColor"/><rect x="1" y="5" width="15" height="14" rx="2" stroke="currentColor" stroke-width="2"/></svg>
+      </button>
+      <button id="call-btn-screen" onclick="toggleScreenShare()" class="call-ctrl-btn" title="Bildschirm teilen">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/><line x1="8" y1="21" x2="16" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="17" x2="12" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <button onclick="endCall()" class="call-action-btn call-decline call-end-btn" title="Beenden">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 2.59 3.4z" fill="currentColor" transform="rotate(135 12 12)"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="media-lightbox" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.92);align-items:center;justify-content:center;flex-direction:column"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>if(typeof emailjs!=='undefined'){emailjs.init('5WuF8cFbJ5zVA9r24');}</script>
+  <script src="api.js"></script>
+  <script src="translations.js"></script>
+  <script>
+    (function() {
+      var src = (window.location.protocol === 'file:') ? '../node_modules/socket.io/client-dist/socket.io.js' : '/socket.io/socket.io.js';
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = function() { window.__socketIoReady = true; };
+      s.onerror = function() { console.warn('[Socket.io] Client konnte nicht geladen werden:', src); };
+      document.head.appendChild(s);
+    })();
+  </script>
+  <script src="calls.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var el;
+      el = document.getElementById('home-btn'); if (el) el.title = t('home');
+      el = document.getElementById('dm-btn'); if (el) el.title = t('directMessages');
+      el = document.getElementById('add-server'); if (el) el.title = t('serverHinzufuegen');
+      el = document.getElementById('toggle-members'); if (el) el.title = t('toggleMembers');
+      el = document.getElementById('server-settings-btn'); if (el) el.title = t('serverSettings');
+      el = document.getElementById('file-upload-btn'); if (el) el.title = t('file');
+      el = document.getElementById('message-input'); if (el) el.placeholder = t('nachrichtAn');
+      el = document.getElementById('open-admin-panel'); if (el) el.title = t('navAdminPanel');
+      el = document.getElementById('open-settings'); if (el) el.title = t('settings');
+      el = document.getElementById('mobile-open-settings'); if (el) el.title = t('settings');
+      el = document.getElementById('tab-friends'); if (el) el.textContent = t('friends');
+      el = document.querySelector('#dm-section .group-label'); if (el) el.textContent = t('directMessages');
+      el = document.getElementById('friends-add-input'); if (el) el.placeholder = t('username') + '...';
+      el = document.getElementById('friends-add-btn'); if (el) el.textContent = t('invite');
+      el = document.getElementById('dm-new'); if (el) el.textContent = '+ ' + t('newMessage');
+      el = document.querySelector('#admin-overlay h2'); if (el) el.textContent = '🛡 ' + t('navAdminPanel');
+      el = document.querySelector('#admin-login-form label'); if (el) el.textContent = t('adminPassword');
+      el = document.getElementById('admin-password'); if (el) el.placeholder = t('currentPassword');
+      el = document.getElementById('admin-login-btn'); if (el) el.textContent = t('login');
+      el = document.getElementById('admin-first-hint'); if (el) el.textContent = t('adminFirstTime');
+      el = document.getElementById('admin-search'); if (el) el.placeholder = t('searchUsers');
+      el = document.querySelector('#create-server-overlay h2'); if (el) el.textContent = t('serverHinzufuegen');
+      el = document.getElementById('show-create-server'); if (el) el.textContent = t('neuenServerErstellen');
+      el = document.getElementById('show-join-server'); if (el) el.textContent = t('serverBeitreten');
+      el = document.querySelector('#create-server-form label'); if (el) el.textContent = t('serverName');
+      el = document.getElementById('new-server-name'); if (el) el.placeholder = t('serverName');
+      el = document.getElementById('create-server-btn'); if (el) el.textContent = t('erstellenBtn');
+      el = document.querySelector('#join-server-form label'); if (el) el.textContent = t('enterInviteCode');
+      el = document.getElementById('join-server-btn'); if (el) el.textContent = t('beitretenBtn');
+      el = document.querySelector('#dm-new-overlay h2'); if (el) el.textContent = t('neueNachricht');
+      el = document.querySelector('#dm-new-overlay label'); if (el) el.textContent = t('username');
+      el = document.getElementById('dm-target-username'); if (el) el.placeholder = t('username') + '...';
+      el = document.getElementById('dm-new-btn'); if (el) el.textContent = t('nachrichtSenden');
+      el = document.querySelector('.ss-nav-exit-text'); if (el) el.textContent = t('schliessen');
+    });
+  </script>
+  <script src="app.js"></script>
+</body>
+</html>
