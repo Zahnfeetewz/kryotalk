@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>kryotalk Embed</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Inter',sans-serif;background:transparent;margin:0;padding:16px;min-height:100vh;display:flex;align-items:center;justify-content:center}
+    .embed-card{width:100%;max-width:320px;border-radius:16px;padding:24px;text-align:center;border:1px solid var(--eb,#27272a);background:var(--ecbg,#18181b);backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+    .embed-avatar{width:72px;height:72px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;overflow:hidden;background:linear-gradient(135deg,var(--ea,#7c3aed),var(--ea2,#a78bfa))}
+    .embed-avatar img{width:100%;height:100%;object-fit:cover}
+    .embed-name{font-size:17px;font-weight:800;margin-bottom:2px}
+    .embed-handle{font-size:12px;color:var(--ets,#71717a);margin-bottom:10px}
+    .embed-bio{font-size:12px;color:var(--ets,#a1a1aa);margin-bottom:14px;line-height:1.5}
+    .embed-links{display:flex;flex-direction:column;gap:6px}
+    .embed-link{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--eb,#27272a);border-radius:10px;text-decoration:none;color:var(--et,#fff);font-size:13px;font-weight:500;transition:all .2s}
+    .embed-link:hover{border-color:var(--ea,#7c3aed);background:rgba(124,58,237,.08)}
+    .embed-link .el-icon{font-size:16px;width:22px;text-align:center;flex-shrink:0}
+    .embed-link .el-text{flex:1;text-align:left}
+    .embed-link .el-arrow{color:var(--ets,#71717a);font-size:13px}
+    .embed-footer{margin-top:14px;font-size:10px;color:#3f3f46}
+    .embed-footer a{color:#7c3aed;text-decoration:none}
+    .embed-socials{display:flex;gap:6px;justify-content:center;margin-bottom:12px}
+    .embed-social{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;text-decoration:none;border:1px solid var(--eb,#27272a);background:rgba(255,255,255,.04);transition:all .2s}
+    .embed-social:hover{border-color:var(--ea,#7c3aed);background:rgba(124,58,237,.1)}
+  </style>
+</head>
+<body>
+  <div class="embed-card" id="card">
+    <div style="color:#71717a;font-size:13px">Laden...</div>
+  </div>
+<script>
+const username=window.location.pathname.split('/').filter(Boolean).pop();
+const SOCIAL_ICONS={instagram:'&#128247;',twitter:'&#128038;',tiktok:'&#127925;',youtube:'&#127909;',discord:'&#128172;',twitch:'&#127918;',spotify:'&#127911;',linkedin:'&#128188;',snapchat:'&#128123;',reddit:'&#128308;',pinterest:'&#128204;',facebook:'&#128100;',soundcloud:'&#128264;',github:'&#128025;',telegram:'&#9992;&#65039;',email:'&#128231;',website:'&#127760;'};
+
+async function loadEmbed(){
+  if(!username){document.getElementById('card').innerHTML='<div style="color:#71717a;font-size:13px">Kein Benutzername</div>';return}
+  try{
+    const r=await fetch('/api/profile/'+encodeURIComponent(username));
+    if(!r.ok)throw new Error();
+    const p=await r.json();
+    const t=p.theme||{};
+    const card=document.getElementById('card');
+    card.style.setProperty('--ea',t.accent||'#7c3aed');
+    card.style.setProperty('--ea2',t.accent2||'#a78bfa');
+    card.style.setProperty('--ecbg',t.cardBg||'#18181b');
+    card.style.setProperty('--eb',t.cardBorder||'#27272a');
+    card.style.setProperty('--et',t.textColor||'#fff');
+    card.style.setProperty('--ets',t.textSecondary||'#a1a1aa');
+
+    const links=(p.links||[]).filter(l=>l.enabled!==false).slice(0,5);
+
+    let socialsHtml='';
+    if(p.socials&&p.socials.length){
+      socialsHtml='<div class="embed-socials">'+p.socials.map(s=>`<a class="embed-social" href="${s.url}" target="_blank" title="${s.platform}">${SOCIAL_ICONS[s.platform]||'&#128279;'}</a>`).join('')+'</div>';
+    }
+
+    card.innerHTML=`
+      <div class="embed-avatar" style="background:linear-gradient(135deg,${t.accent||'#7c3aed'},${t.accent2||'#a78bfa'}88)">
+        ${p.avatar?'<img src="'+p.avatar+'">':p.username.charAt(0).toUpperCase()}
+      </div>
+      <div class="embed-name" style="color:${t.textColor||'#fff'}">${p.username}</div>
+      <div class="embed-handle" style="color:${t.textSecondary||'#71717a'}">@${p.username}</div>
+      ${p.bio?'<div class="embed-bio" style="color:'+(t.textSecondary||'#a1a1aa')+'">'+p.bio.replace(/</g,'&lt;').substring(0,120)+(p.bio.length>120?'...':'')+'</div>':''}
+      ${socialsHtml}
+      <div class="embed-links">${links.map(l=>`<a class="embed-link" href="/api/link/${p.username}/${l.id}/click" target="_blank" style="border-color:${(t.cardBorder||'#27272a')}"><span class="el-icon">${l.icon||'&#128279;'}</span><span class="el-text">${l.title}</span><span class="el-arrow">&#8594;</span></a>`).join('')}</div>
+      <div class="embed-footer">Erstellt mit <a href="/" target="_blank">kryotalk</a></div>
+    `;
+  }catch(e){
+    document.getElementById('card').innerHTML='<div style="color:#71717a;font-size:13px">Profil nicht gefunden</div>';
+  }
+}
+loadEmbed();
+</script>
+</body>
+</html>
