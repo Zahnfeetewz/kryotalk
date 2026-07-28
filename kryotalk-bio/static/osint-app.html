@@ -127,6 +127,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;displ
     <div class="nav-item" onclick="switchTool('dorks')"><span class="icon">🔗</span>Google Dorks</div>
     <div class="nav-item" onclick="switchTool('crypto')"><span class="icon">💰</span>Crypto Wallet</div>
     <div class="nav-item" onclick="switchTool('wifi')"><span class="icon">📶</span>WiFi / BSSID</div>
+    <div class="nav-item" onclick="switchTool('discord')"><span class="icon">💬</span>Discord</div>
+    <div class="nav-item" onclick="switchTool('roblox')"><span class="icon">🎮</span>Roblox</div>
   </div>
   <div class="sidebar-footer">
     <a href="/osint">← Zurück</a> · <a href="/dashboard">Dashboard</a>
@@ -236,6 +238,52 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;displ
       <button class="btn btn-primary" onclick="searchWifi()" id="wifiBtn">Lookup</button>
     </div>
     <div id="wifiResults"></div>
+  </div>
+
+  <!-- DISCORD -->
+  <div id="tool-discord" class="tool-page hidden">
+    <div class="page-header"><h2>💬 Discord OSINT</h2><p>User-Profil, Status, Aktivitäten, Server-Invites, Connections</p></div>
+    <div class="tab-bar" id="discordTabs">
+      <div class="tab active" onclick="switchDiscordTab('user')">User Lookup</div>
+      <div class="tab" onclick="switchDiscordTab('server')">Server / Invite</div>
+    </div>
+    <div id="discordTabUser">
+      <div class="input-group">
+        <input type="text" id="discordUserInput" placeholder="Username oder User-ID eingeben..." onkeydown="if(event.key==='Enter')searchDiscord()">
+        <button class="btn btn-primary" onclick="searchDiscord()" id="discordBtn">Suchen</button>
+      </div>
+      <div id="discordResults"></div>
+    </div>
+    <div id="discordTabServer" class="hidden">
+      <div class="input-group">
+        <input type="text" id="discordServerInput" placeholder="Invite-Code oder URL (z.B. discord.gg/abc123)..." onkeydown="if(event.key==='Enter')searchDiscordServer()">
+        <button class="btn btn-primary" onclick="searchDiscordServer()" id="discordServerBtn">Analysieren</button>
+      </div>
+      <div id="discordServerResults"></div>
+    </div>
+  </div>
+
+  <!-- ROBLOX -->
+  <div id="tool-roblox" class="tool-page hidden">
+    <div class="page-header"><h2>🎮 Roblox OSINT</h2><p>User-Profil, Avatar, Freunde, Gruppen, Spiele, Presence, Social Links</p></div>
+    <div class="tab-bar" id="robloxTabs">
+      <div class="tab active" onclick="switchRobloxTab('user')">User Lookup</div>
+      <div class="tab" onclick="switchRobloxTab('game')">Spiel Lookup</div>
+    </div>
+    <div id="robloxTabUser">
+      <div class="input-group">
+        <input type="text" id="robloxUserInput" placeholder="Username oder User-ID eingeben..." onkeydown="if(event.key==='Enter')searchRoblox()">
+        <button class="btn btn-primary" onclick="searchRoblox()" id="robloxBtn">Suchen</button>
+      </div>
+      <div id="robloxResults"></div>
+    </div>
+    <div id="robloxTabGame" class="hidden">
+      <div class="input-group">
+        <input type="text" id="robloxGameInput" placeholder="Place-ID eingeben..." onkeydown="if(event.key==='Enter')searchRobloxGame()">
+        <button class="btn btn-primary" onclick="searchRobloxGame()" id="robloxGameBtn">Analysieren</button>
+      </div>
+      <div id="robloxGameResults"></div>
+    </div>
   </div>
 
 </div>
@@ -516,6 +564,219 @@ async function searchWifi(){
   document.getElementById('wifiResults').innerHTML=html;
   }catch(e){document.getElementById('wifiResults').innerHTML=`<div class="result-card" style="border-color:var(--danger)"><p style="color:var(--danger)">❌ ${esc(e.message)}</p></div>`}
   setLoading('wifiBtn',false);
+}
+
+// ============= DISCORD =============
+function switchDiscordTab(tab){
+  document.getElementById('discordTabUser').classList.toggle('hidden',tab!=='user');
+  document.getElementById('discordTabServer').classList.toggle('hidden',tab!=='server');
+  document.querySelectorAll('#discordTabs .tab').forEach((t,i)=>t.classList.toggle('active',i===(tab==='user'?0:1)));
+}
+
+async function searchDiscord(){
+  const q=document.getElementById('discordUserInput').value.trim();if(!q)return;
+  setLoading('discordBtn',true);
+  document.getElementById('discordResults').innerHTML='<div class="result-card"><div style="display:flex;align-items:center;gap:10px"><span class="loading"></span><span style="color:var(--text2)">Suche Discord-User...</span></div></div>';
+  try{const r=await fetch('/api/osint/discord',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})});
+  const d=await r.json();if(d.error)throw new Error(d.error);
+  if(!d.user){document.getElementById('discordResults').innerHTML='<div class="result-card"><p style="color:var(--danger)">❌ User nicht gefunden</p></div>';setLoading('discordBtn',false);return}
+  const u=d.user;
+  const statusColors={online:'#22c55e',idle:'#fbbf24',dnd:'#ef4444',offline:'#64748b',invisible:'#64748b'};
+  const statusLabels={online:'Online',idle:'Idle',dnd:'Do Not Disturb',offline:'Offline',invisible:'Unsichtbar'};
+  let html=`<div class="result-card" style="border-left:3px solid ${statusColors[u.status]||'#64748b'}">
+    <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+      <div style="position:relative;flex-shrink:0">
+        <img src="${esc(u.avatar)}" style="width:96px;height:96px;border-radius:50%;border:3px solid ${statusColors[u.status]||'#64748b'}">
+        <div style="position:absolute;bottom:2px;right:2px;width:22px;height:22px;border-radius:50%;background:${statusColors[u.status]||'#64748b'};border:3px solid var(--surface);display:flex;align-items:center;justify-content:center;font-size:10px">${u.status==='online'?'●':u.status==='idle'?'◐':u.status==='dnd'?'⊘':'○'}</div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:1.4rem;font-weight:800;color:var(--text)">${esc(u.globalName||u.username)} ${u.bot?'<span style="font-size:.65rem;background:#5865F2;color:#fff;padding:2px 6px;border-radius:4px;vertical-align:middle">BOT</span>':''} ${u.hasVerifiedBadge?'<span style="font-size:.65rem;background:#00ff41;color:#000;padding:2px 6px;border-radius:4px;vertical-align:middle">✓</span>':''}</div>
+        <div style="font-size:.85rem;color:var(--text2);font-family:JetBrains Mono,monospace">@${esc(u.username)}${u.discriminator!=='0'?'#'+u.discriminator:''}</div>
+        <div style="font-size:.8rem;color:#475569;margin-top:4px">ID: <code style="color:var(--accent)">${esc(u.id)}</code> · Erstellt: ${esc(u.createdAt||'Unbekannt')}</div>
+        ${u.status?`<div style="margin-top:8px"><span class="tag" style="background:${statusColors[u.status]}22;color:${statusColors[u.status]};border:1px solid ${statusColors[u.status]}44">${statusLabels[u.status]||u.status}</span></div>`:''}
+      </div>
+    </div></div>`;
+  if(u.activities&&u.activities.length){
+    html+=`<div class="result-card"><h3>🎯 Aktivitäten</h3>`;
+    u.activities.forEach(a=>{
+      const typeNames={0:'Spielt',1:'Streamt',2:'Hört zu',3:'Schaut',5:'Wettbewerb'};
+      html+=`<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px"><span class="tag tag-found">${typeNames[a.type]||'Aktivität'}</span><strong>${esc(a.name)}</strong></div>
+        ${a.details?`<div style="font-size:.8rem;color:var(--text2);margin-top:4px">${esc(a.details)}</div>`:''}
+        ${a.state?`<div style="font-size:.8rem;color:var(--text2)">${esc(a.state)}</div>`:''}
+      </div>`;
+    });
+    html+='</div>';
+  }
+  if(u.customStatus&&Object.keys(u.customStatus).length){
+    html+=`<div class="result-card"><h3>📝 Custom Status</h3><div class="result-grid">`;
+    for(const[k,v] of Object.entries(u.customStatus)){html+=`<div class="result-item"><div class="label">${esc(k)}</div><div class="value">${esc(v)}</div></div>`}
+    html+='</div></div>';
+  }
+  if(u.connections&&u.connections.length){
+    html+=`<div class="result-card"><h3>🔗 Connections</h3><div class="result-grid">`;
+    u.connections.forEach(c=>{html+=`<div class="result-item"><div class="label">${esc(c.type||c.name||'')}</div><div class="value blue">${esc(c.name||c.id||'')}</div></div>`});
+    html+='</div></div>';
+  }
+  if(u.mutualGuilds&&u.mutualGuilds.length){
+    html+=`<div class="result-card"><h3>👥 Mutual Servers (${u.mutualGuilds.length})</h3><div style="display:flex;flex-wrap:wrap;gap:8px">`;
+    u.mutualGuilds.forEach(g=>{html+=`<div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:.8rem">${g.icon?`<img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=64" style="width:24px;height:24px;border-radius:50%">`:'<div style="width:24px;height:24px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:10px;color:#000;font-weight:700">'+(g.name||'?')[0]+'</div>'}<span>${esc(g.name||'Unbekannt')}</span></div>`});
+    html+='</div></div>';
+  }
+  if(u.banner){html+=`<div class="result-card"><h3>🖼️ Banner</h3><img src="${esc(u.banner)}" style="width:100%;max-height:300px;object-fit:cover;border-radius:8px;border:1px solid var(--border)"></div>`}
+  html+=`<div class="result-card"><h3>🔗 Direktlinks</h3><div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a href="https://discord.com/users/${u.id}" target="_blank" class="btn btn-secondary" style="text-decoration:none">Discord Profil</a>
+    <a href="${esc(u.avatar)}" target="_blank" class="btn btn-secondary" style="text-decoration:none">Avatar (HD)</a>
+  </div></div>`;
+  document.getElementById('discordResults').innerHTML=html;
+  }catch(e){document.getElementById('discordResults').innerHTML=`<div class="result-card" style="border-color:var(--danger)"><p style="color:var(--danger)">❌ ${esc(e.message)}</p></div>`}
+  setLoading('discordBtn',false);
+}
+
+async function searchDiscordServer(){
+  const inv=document.getElementById('discordServerInput').value.trim();if(!inv)return;
+  setLoading('discordServerBtn',true);
+  document.getElementById('discordServerResults').innerHTML='<div class="result-card"><div style="display:flex;align-items:center;gap:10px"><span class="loading"></span><span style="color:var(--text2)">Analysiere Server-Invite...</span></div></div>';
+  try{const r=await fetch('/api/osint/discord/server',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({invite:inv})});
+  const d=await r.json();if(d.error)throw new Error(d.error);
+  const g=d.guild;
+  let html=`<div class="result-card">
+    <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+      ${g.icon?`<img src="${esc(g.icon)}" style="width:80px;height:80px;border-radius:50%;border:2px solid var(--border)">`:''}
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:1.3rem;font-weight:800">${esc(g.name||'Unbekannt')}</div>
+        <div style="font-size:.8rem;color:#475569;margin-top:2px">ID: <code style="color:var(--accent)">${esc(g.id||'')}</code></div>
+        ${g.description?`<div style="font-size:.85rem;color:var(--text2);margin-top:8px">${esc(g.description)}</div>`:''}
+      </div>
+    </div></div>`;
+  html+=`<div class="result-card"><h3>📊 Server-Statistiken</h3><div class="result-grid">
+    <div class="result-item"><div class="label">Mitglieder</div><div class="value green">${(g.memberCount||0).toLocaleString('de-DE')}</div></div>
+    <div class="result-item"><div class="label">Online</div><div class="value blue">${(g.onlineCount||0).toLocaleString('de-DE')}</div></div>
+    <div class="result-item"><div class="label">Verifizierung</div><div class="value">${['Keine','Niedrig','Mittel','Hoch','Sehr hoch'][g.verificationLevel||0]||'Unbekannt'}</div></div>
+    <div class="result-item"><div class="label">NSFW</div><div class="value ${g.nsfw?'red':'green'}">${g.nsfw?'⚠ Ja':'✓ Nein'}</div></div>
+  </div></div>`;
+  if(g.features&&g.features.length){html+=`<div class="result-card"><h3>⭐ Features</h3><div style="display:flex;flex-wrap:wrap;gap:6px">`;g.features.forEach(f=>{html+=`<span class="tag tag-found">${esc(f)}</span>`});html+='</div></div>'}
+  if(d.inviter){html+=`<div class="result-card"><h3>👤 Invite von</h3><div style="display:flex;align-items:center;gap:10px">${d.inviter.avatar?`<img src="${esc(d.inviter.avatar)}" style="width:36px;height:36px;border-radius:50%">`:''}<span style="font-weight:600">${esc(d.inviter.username)}</span><span style="color:#475569;font-size:.8rem">ID: ${esc(d.inviter.id||'')}</span></div></div>`}
+  if(g.banner){html+=`<div class="result-card"><h3>🖼️ Banner</h3><img src="${esc(g.banner)}" style="width:100%;max-height:300px;object-fit:cover;border-radius:8px;border:1px solid var(--border)"></div>`}
+  html+=`<div class="result-card"><h3>🔗 Direktlinks</h3><div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a href="https://discord.com/invite/${esc(d.code||'')}" target="_blank" class="btn btn-secondary" style="text-decoration:none">Discord Invite</a>
+    ${g.id?`<a href="https://discord.com/servers/${esc(g.id)}" target="_blank" class="btn btn-secondary" style="text-decoration:none">Server-Explorer</a>`:''}
+  </div></div>`;
+  document.getElementById('discordServerResults').innerHTML=html;
+  }catch(e){document.getElementById('discordServerResults').innerHTML=`<div class="result-card" style="border-color:var(--danger)"><p style="color:var(--danger)">❌ ${esc(e.message)}</p></div>`}
+  setLoading('discordServerBtn',false);
+}
+
+// ============= ROBLOX =============
+function switchRobloxTab(tab){
+  document.getElementById('robloxTabUser').classList.toggle('hidden',tab!=='user');
+  document.getElementById('robloxTabGame').classList.toggle('hidden',tab!=='game');
+  document.querySelectorAll('#robloxTabs .tab').forEach((t,i)=>t.classList.toggle('active',i===(tab==='user'?0:1)));
+}
+
+async function searchRoblox(){
+  const q=document.getElementById('robloxUserInput').value.trim();if(!q)return;
+  setLoading('robloxBtn',true);
+  document.getElementById('robloxResults').innerHTML='<div class="result-card"><div style="display:flex;align-items:center;gap:10px"><span class="loading"></span><span style="color:var(--text2)">Suche Roblox-User...</span></div></div>';
+  try{const isId=/^\d+$/.test(q);const body=isId?{userId:q}:{username:q};
+  const r=await fetch('/api/osint/roblox',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d=await r.json();if(d.error)throw new Error(d.error);
+  if(!d.user){document.getElementById('robloxResults').innerHTML='<div class="result-card"><p style="color:var(--danger)">❌ User nicht gefunden</p></div>';setLoading('robloxBtn',false);return}
+  const u=d.user;
+  const createdDate=new Date(u.created).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  let html=`<div class="result-card" style="border-left:3px solid ${u.isBanned?'var(--danger)':'var(--accent)'}">
+    <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+      ${d.avatar?`<img src="${esc(d.avatar)}" style="width:96px;height:96px;border-radius:50%;border:3px solid ${u.isBanned?'var(--danger)':'var(--accent)'}">`:''}
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:1.4rem;font-weight:800">${esc(u.displayName)} ${u.hasVerifiedBadge?'<span style="font-size:.65rem;background:#00ff41;color:#000;padding:2px 6px;border-radius:4px;vertical-align:middle">✓</span>':''} ${u.isBanned?'<span style="font-size:.65rem;background:var(--danger);color:#fff;padding:2px 6px;border-radius:4px;vertical-align:middle">GEBANNT</span>':''}</div>
+        <div style="font-size:.85rem;color:var(--text2);font-family:JetBrains Mono,monospace">@${esc(u.name)}</div>
+        <div style="font-size:.8rem;color:#475569;margin-top:4px">ID: <code style="color:var(--accent)">${esc(String(u.id))}</code> · Erstellt: ${createdDate}</div>
+        ${u.description?`<div style="font-size:.85rem;color:var(--text2);margin-top:8px;max-width:500px;line-height:1.6">${esc(u.description)}</div>`:''}
+      </div>
+    </div></div>`;
+  if(d.fullAvatar){html+=`<div class="result-card"><h3>🖼️ Avatar (Full Size)</h3><img src="${esc(d.fullAvatar)}" style="max-width:420px;width:100%;border-radius:12px;border:1px solid var(--border)"></div>`}
+  if(d.presence){html+=`<div class="result-card"><h3>🟢 Aktueller Status</h3><div class="result-grid">
+    <div class="result-item"><div class="label">Status</div><div class="value ${d.presence.status==='Online'||d.presence.status==='InGame'?'green':d.presence.status==='InStudio'?'blue':'yellow'}">${esc(d.presence.status)}</div></div>
+    ${d.presence.lastLocation?`<div class="result-item"><div class="label">Letzter Ort</div><div class="value">${esc(d.presence.lastLocation)}</div></div>`:''}
+    ${d.presence.placeId?`<div class="result-item"><div class="label">Place ID</div><div class="value blue">${d.presence.placeId}</div></div>`:''}
+    ${d.presence.universeId?`<div class="result-item"><div class="label">Universe ID</div><div class="value blue">${d.presence.universeId}</div></div>`:''}
+  </div></div>`}
+  if(d.friends||d.followers||d.following){
+    html+=`<div class="result-card"><h3>👥 Social Stats</h3><div class="result-grid">
+      ${d.friends?`<div class="result-item"><div class="label">Freunde</div><div class="value green">${(d.friends.count||0).toLocaleString('de-DE')}</div></div>`:''}
+      ${d.followers?`<div class="result-item"><div class="label">Follower</div><div class="value blue">${(d.followers.count||0).toLocaleString('de-DE')}</div></div>`:''}
+      ${d.following?`<div class="result-item"><div class="label">Folge ich</div><div class="value">${(d.following.count||0).toLocaleString('de-DE')}</div></div>`:''}
+    </div></div>`;
+  }
+  if(d.tradeValue){html+=`<div class="result-card"><h3>💎 Handelswert</h3><div class="result-grid"><div class="result-item"><div class="label">Geschätzter Wert</div><div class="value green">${d.tradeValue.toLocaleString('de-DE')} Robux</div></div></div></div>`}
+  if(d.usernameHistory&&d.usernameHistory.length){
+    html+=`<div class="result-card"><h3>📝 Alte Usernames</h3><div style="display:flex;flex-wrap:wrap;gap:6px">`;
+    d.usernameHistory.forEach(n=>{html+=`<span class="tag tag-found">${esc(n)}</span>`});
+    html+='</div></div>';
+  }
+  if(d.socialLinks&&d.socialLinks.length){
+    html+=`<div class="result-card"><h3>🔗 Social Links</h3><div class="result-grid">`;
+    const socialIcons={Discord:'💬',YouTube:'🎬',Twitter:'🐦',Twitch:'🎮',Instagram:'📸',RobloxGroup:'👥',Facebook:'👤',Guilded:'⚔️'};
+    d.socialLinks.forEach(s=>{html+=`<div class="result-item"><div class="label">${socialIcons[s.type]||'🔗'} ${esc(s.type)}</div><div class="value blue" style="word-break:break-all"><a href="${esc(s.url)}" target="_blank" style="color:var(--accent)">${esc(s.title||s.url)}</a></div></div>`});
+    html+='</div></div>';
+  }
+  if(d.groups&&d.groups.length){
+    html+=`<div class="result-card"><h3>👥 Gruppen (${d.groups.length})</h3><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">`;
+    d.groups.forEach(g=>{
+      html+=`<a href="https://www.roblox.com/groups/${g.id}/-/group" target="_blank" style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--text);transition:all .2s;font-size:.8rem" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        ${g.icon?`<img src="${esc(g.icon)}" style="width:32px;height:32px;border-radius:50%">`:''}
+        <div style="flex:1;min-width:0"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(g.name)}</div><div style="color:#475569;font-size:.7rem">${(g.memberCount||0).toLocaleString('de-DE')} Mitglieder · ${esc(g.role)}</div></div>
+      </a>`;
+    });
+    html+='</div></div>';
+  }
+  html+=`<div class="result-card"><h3>🔗 Direktlinks</h3><div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a href="https://www.roblox.com/users/${u.id}/profile" target="_blank" class="btn btn-secondary" style="text-decoration:none">Roblox Profil</a>
+    <a href="https://www.roblox.com/users/${u.id}/friends" target="_blank" class="btn btn-secondary" style="text-decoration:none">Freunde</a>
+    <a href="https://www.roblox.com/users/${u.id}/inventory" target="_blank" class="btn btn-secondary" style="text-decoration:none">Inventar</a>
+  </div></div>`;
+  document.getElementById('robloxResults').innerHTML=html;
+  }catch(e){document.getElementById('robloxResults').innerHTML=`<div class="result-card" style="border-color:var(--danger)"><p style="color:var(--danger)">❌ ${esc(e.message)}</p></div>`}
+  setLoading('robloxBtn',false);
+}
+
+async function searchRobloxGame(){
+  const pid=document.getElementById('robloxGameInput').value.trim();if(!pid)return;
+  setLoading('robloxGameBtn',true);
+  document.getElementById('robloxGameResults').innerHTML='<div class="result-card"><div style="display:flex;align-items:center;gap:10px"><span class="loading"></span><span style="color:var(--text2)">Lade Spiel-Daten...</span></div></div>';
+  try{const r=await fetch('/api/osint/roblox/game',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({placeId:pid})});
+  const d=await r.json();if(d.error)throw new Error(d.error);
+  if(!d.game&&!d.details){document.getElementById('robloxGameResults').innerHTML='<div class="result-card"><p style="color:var(--danger)">❌ Spiel nicht gefunden</p></div>';setLoading('robloxGameBtn',false);return}
+  const g=d.game||{};
+  let html=`<div class="result-card"><h3>🎮 ${esc(g.name||'Unbekannt')}</h3><div class="result-grid">
+    <div class="result-item"><div class="label">Place ID</div><div class="value">${esc(String(pid))}</div></div>
+    <div class="result-item"><div class="label">Universe ID</div><div class="value blue">${d.universeId||g.id||'N/A'}</div></div>
+    <div class="result-item"><div class="label">Creator</div><div class="value">${esc(g.creator?.name||'Unbekannt')}</div></div>
+    <div class="result-item"><div class="label">Creator-Typ</div><div class="value">${esc(g.creator?.type||'')}</div></div>
+    ${g.playing!==undefined?`<div class="result-item"><div class="label">Spieler</div><div class="value green">${(g.playing||0).toLocaleString('de-DE')}</div></div>`:''}
+    ${g.visits!==undefined?`<div class="result-item"><div class="label">Besuche</div><div class="value">${(g.visits||0).toLocaleString('de-DE')}</div></div>`:''}
+    ${g.favoritedCount!==undefined?`<div class="result-item"><div class="label">Favoriten</div><div class="value yellow">${(g.favoritedCount||0).toLocaleString('de-DE')}</div></div>`:''}
+    ${g.maxPlayers?`<div class="result-item"><div class="label">Max. Spieler</div><div class="value">${g.maxPlayers}</div></div>`:''}
+    ${g.genre?`<div class="result-item"><div class="label">Genre</div><div class="value">${esc(g.genre)}</div></div>`:''}
+    ${g.created?`<div class="result-item"><div class="label">Erstellt</div><div class="value">${new Date(g.created).toLocaleDateString('de-DE')}</div></div>`:''}
+    ${g.price!==null?`<div class="result-item"><div class="label">Preis</div><div class="value">${g.price===0?'Kostenlos':g.price+' Robux'}</div></div>`:''}
+    ${g.year!==undefined?`<div class="result-item"><div class="label">Jahr</div><div class="value">${g.year}</div></div>`:''}
+  </div></div>`;
+  if(g.description){html+=`<div class="result-card"><h3>📝 Beschreibung</h3><p style="color:var(--text2);font-size:.9rem;line-height:1.7">${esc(g.description)}</p></div>`}
+  if(g.gameLifecycleIsEnabled!==undefined||g.isGenreEnforced!==undefined){
+    html+=`<div class="result-card"><h3>⚙️ Flags</h3><div class="result-grid">
+      ${g.chatEnabled!==undefined?`<div class="result-item"><div class="label">Chat</div><div class="value ${g.chatEnabled?'green':'yellow'}">${g.chatEnabled?'✓':'✗'}</div></div>`:''}
+      ${g.isGenreEnforced!==undefined?`<div class="result-item"><div class="label">Genre Enforced</div><div class="value">${g.isGenreEnforced?'✓':'✗'}</div></div>`:''}
+      ${g.isAllGenre!==undefined?`<div class="result-item"><div class="label">Alle Genres</div><div class="value">${g.isAllGenre?'✓':'✗'}</div></div>`:''}
+    </div></div>`}
+  html+=`<div class="result-card"><h3>🔗 Direktlinks</h3><div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a href="https://www.roblox.com/games/${pid}" target="_blank" class="btn btn-secondary" style="text-decoration:none">Spiel öffnen</a>
+    ${d.universeId?`<a href="https://www.roblox.com/games/${d.universeId}" target="_blank" class="btn btn-secondary" style="text-decoration:none">Universe</a>`:''}
+    <a href="https://www.roblox.com/games/${pid}/badges" target="_blank" class="btn btn-secondary" style="text-decoration:none">Badges</a>
+  </div></div>`;
+  document.getElementById('robloxGameResults').innerHTML=html;
+  }catch(e){document.getElementById('robloxGameResults').innerHTML=`<div class="result-card" style="border-color:var(--danger)"><p style="color:var(--danger)">❌ ${esc(e.message)}</p></div>`}
+  setLoading('robloxGameBtn',false);
 }
 </script>
 </body>

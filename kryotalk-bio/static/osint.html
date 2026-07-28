@@ -9,16 +9,16 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#000;color:#e2e8f0;font-family:'Inter',sans-serif;overflow-x:hidden}
-canvas#matrix{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:.08}
+canvas#matrix{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:.08;pointer-events:none}
 .hero{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px}
-.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(0,255,65,.06) 0%,transparent 70%)}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(0,255,65,.06) 0%,transparent 70%);pointer-events:none}
 .glow-line{width:200px;height:2px;background:linear-gradient(90deg,transparent,#00ff41,transparent);margin:0 auto 30px;animation:pulse 3s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:.4;box-shadow:0 0 10px #00ff4144}50%{opacity:1;box-shadow:0 0 30px #00ff4188}}
 .logo-text{font-family:'JetBrains Mono',monospace;font-size:clamp(2.5rem,6vw,5rem);font-weight:700;color:#00ff41;text-shadow:0 0 40px #00ff4144;letter-spacing:-2px;margin-bottom:8px}
 .logo-sub{font-family:'JetBrains Mono',monospace;font-size:clamp(.8rem,2vw,1.1rem);color:#4ade80;opacity:.7;letter-spacing:4px;text-transform:uppercase;margin-bottom:40px}
 .tagline{font-size:clamp(1rem,2.5vw,1.4rem);color:#94a3b8;max-width:600px;line-height:1.7;margin-bottom:50px}
 .tagline strong{color:#e2e8f0}
-.cta-btn{display:inline-flex;align-items:center;gap:12px;padding:16px 40px;background:linear-gradient(135deg,#00ff41,#0ea548);color:#000;font-weight:800;font-size:1.1rem;border:none;border-radius:12px;cursor:pointer;text-decoration:none;transition:all .3s;box-shadow:0 0 30px #00ff4133}
+.cta-btn{display:inline-flex;align-items:center;gap:12px;padding:16px 40px;background:linear-gradient(135deg,#00ff41,#0ea548);color:#000;font-weight:800;font-size:1.1rem;border:none;border-radius:12px;cursor:pointer;text-decoration:none;transition:all .3s;box-shadow:0 0 30px #00ff4133;position:relative;z-index:10}
 .cta-btn:hover{transform:translateY(-2px);box-shadow:0 0 50px #00ff4166}
 .cta-btn svg{width:20px;height:20px}
 .stats-row{display:flex;gap:40px;margin-top:60px;flex-wrap:wrap;justify-content:center}
@@ -41,7 +41,7 @@ canvas#matrix{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opaci
 @keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .tool-chip{flex-shrink:0;padding:10px 20px;background:rgba(0,255,65,.06);border:1px solid rgba(0,255,65,.15);border-radius:100px;font-size:.85rem;color:#4ade80;white-space:nowrap;font-family:'JetBrains Mono',monospace}
 .footer{position:relative;z-index:1;text-align:center;padding:60px 20px;border-top:1px solid rgba(255,255,255,.05);color:#475569;font-size:.8rem}
-.footer a{color:#00ff41;text-decoration:none}
+.footer a{color:#00ff41;text-decoration:none;position:relative;z-index:10}
 .terminal{position:relative;z-index:1;max-width:700px;margin:0 auto 60px;background:#0a0a0a;border:1px solid #1a1a2e;border-radius:12px;overflow:hidden}
 .terminal-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;background:#111;border-bottom:1px solid #1a1a2e}
 .terminal-dot{width:12px;height:12px;border-radius:50%}
@@ -93,6 +93,8 @@ canvas#matrix{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opaci
     <div class="feature-card"><div class="feature-icon">🗂️</div><h3>EXIF-Metadaten</h3><p>Extrahiere Kamera-Modelle, GPS-Koordinaten, Software, Aufnahmedaten und versteckte Metadaten aus Bildern.</p></div>
     <div class="feature-card"><div class="feature-icon">🔗</div><h3>Google Dorks</h3><p>Vorgefertigte Suchbefehle für E-Mails, Login-Seiten, Dateien, Subdomains, Social Media und Sicherheitslücken.</p></div>
     <div class="feature-card"><div class="feature-icon">📶</div><h3>WiFi OSINT</h3><p>Hersteller-Erkennung über BSSID/MAC-Adresse, OUI-Lookup und Netzwerk-Informationen.</p></div>
+    <div class="feature-card"><div class="feature-icon">💬</div><h3>Discord OSINT</h3><p>User-Profil mit Avatar, Status, Aktivitäten, Connections, Mutual Servers. Server-Analyse über Invites mit Member-Zahlen und Features.</p></div>
+    <div class="feature-card"><div class="feature-icon">🎮</div><h3>Roblox OSINT</h3><p>User-Profil, Avatar, Freunde/Follower, Gruppen, Spiele, Presence-Status, alte Usernames, Social Links, Handelswert.</p></div>
   </div>
 </div>
 

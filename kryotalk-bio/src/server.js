@@ -283,13 +283,18 @@ function httpGet(url, opts = {}) {
   return new Promise((resolve, reject) => {
     const timeout = opts.timeout || 5000;
     const mod = url.startsWith('https') ? https : http;
-    const req = mod.get(url, { timeout, headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36', ...(opts.headers || {}) }, signal: AbortSignal?.timeout?.(timeout) }, res => {
+    const method = opts.method || 'GET';
+    const urlObj = new URL(url);
+    const reqOpts = { hostname: urlObj.hostname, port: urlObj.port, path: urlObj.pathname + urlObj.search, method, timeout, headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36', ...(opts.headers || {}) } };
+    const req = mod.request(reqOpts, res => {
       let data = '';
       res.on('data', c => data += c);
       res.on('end', () => resolve({ status: res.statusCode, headers: res.headers, body: data }));
     });
     req.on('error', e => reject(e));
     req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+    if (opts.body) req.write(opts.body);
+    req.end();
   });
 }
 
@@ -665,6 +670,196 @@ app.post('/api/osint/cryptocurrency', async (req, res) => {
     } catch {}
   }
   res.json(result);
+});
+
+// ============= DISCORD OSINT =============
+function discordSnowflakeToDate(id) {
+  try {
+    const ts = (BigInt(id) >> 22n) + 1420070400000n;
+    return new Date(Number(ts));
+  } catch { return null; }
+}
+function discordAvatarUrl(userId, avatarHash, size = 512) {
+  if (!avatarHash) return null;
+  const ext = avatarHash.startsWith('a_') ? 'gif' : 'png';
+  return `https://cdn.discordapp.com/avatars/${userId}/${avatarHash}.${ext}?size=${size}`;
+}
+
+app.post('/api/osint/discord', async (req, res) => {
+  const { query } = req.body;
+  if (!query) return res.status(400).json({ error: 'Username oder ID nötig' });
+  const result = { user: null, lanyard: null, error: null };
+  const input = query.trim();
+  const isId = /^\d{17,20}$/.test(input);
+  let userId = isId ? input : null;
+
+  if (!userId) {
+    try {
+      const search = await httpGet(`https://api.lanyard.rest/v1/users/${input}`, { timeout: 6000 });
+      if (search.status === 200) {
+        const d = JSON.parse(search.body);
+        if (d.data && d.data.discord_user) {
+          userId = d.data.discord_user.id;
+          result.lanyard = d.data;
+        }
+      }
+    } catch {}
+  }
+
+  if (!userId) {
+    result.error = 'User nicht gefunden. Lanyard überwacht diesen User nicht. Versuche die Discord User-ID (17-20 Ziffern).';
+    return res.json(result);
+  }
+
+  const createdDate = discordSnowflakeToDate(userId);
+
+  try {
+    const r = await httpGet(`https://api.lanyard.rest/v1/users/${userId}`, { timeout: 6000 });
+    if (r.status === 200) {
+      const d = JSON.parse(r.body);
+      if (d.data) {
+        result.lanyard = d.data;
+        const u = d.data.discord_user;
+        result.user = {
+          id: u.id, username: u.username, globalName: u.global_name || '',
+          avatar: discordAvatarUrl(u.id, u.avatar) || `https://cdn.discordapp.com/embed/avatars/${parseInt(u.discriminator || '0') % 5}.png`,
+          avatarAnimated: u.avatar?.startsWith('a_') || false,
+          discriminator: u.discriminator || '0', bot: u.bot || false, system: u.system || false,
+          banner: u.banner ? discordAvatarUrl(u.id, u.banner) : null,
+          accentColor: u.accent_color || null,
+          createdTimestamp: createdDate ? createdDate.getTime().toString() : '',
+          createdAt: createdDate ? createdDate.toISOString() : 'Unbekannt'
+        };
+        if (d.data.discord_status) result.user.status = d.data.discord_status;
+        if (d.data.activities) result.user.activities = d.data.activities.filter(a => a.type !== 4).map(a => ({
+          name: a.name, type: a.type, details: a.details || '', state: a.state || '',
+          timestamps: a.timestamps || {}, assets: a.assets || {}, flags: a.flags || 0
+        }));
+        if (d.data.kv && Object.keys(d.data.kv).length > 0) result.user.customStatus = d.data.kv;
+      }
+    }
+  } catch {}
+
+  if (!result.user && createdDate) {
+    const avatarCheckUrls = ['https://cdn.discordapp.com/avatars/' + userId + '/a.png', 'https://cdn.discordapp.com/avatars/' + userId + '/.png'];
+    let hasAvatar = false;
+    for (const url of avatarCheckUrls) {
+      try { const r = await httpGet(url, { timeout: 4000 }); if (r.status === 200) { hasAvatar = true; break; } } catch {}
+    }
+    result.user = { id: userId, username: 'Unbekannt (kein Lanyard)', globalName: '', avatar: hasAvatar ? `https://cdn.discordapp.com/avatars/${userId}/a.png?size=512` : `https://cdn.discordapp.com/embed/avatars/${parseInt(userId) % 5}.png`, hasAvatar, bot: false, createdTimestamp: createdDate.getTime().toString(), createdAt: createdDate.toISOString() };
+  }
+
+  if (result.user) {
+    result.user.idUrl = `https://discord.com/users/${userId}`;
+    result.user.avatarUrl = result.user.avatar;
+  }
+
+  res.json(result);
+});
+
+app.post('/api/osint/discord/server', async (req, res) => {
+  const { invite } = req.body;
+  if (!invite) return res.status(400).json({ error: 'Invite-Code oder URL nötig' });
+  const code = invite.replace(/^https?:\/\/(www\.)?(discord\.gg|discord\.com\/invite)\//, '').split('/')[0].split('?')[0].trim();
+  try {
+    const r = await httpGet(`https://discord.com/api/v10/invites/${code}?with_counts=true`, { timeout: 6000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (r.status === 200) {
+      const d = JSON.parse(r.body);
+      const g = d.guild || {};
+      res.json({
+        code: d.code, guild: {
+          id: g.id || '', name: g.name || '',
+          icon: g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=512` : null,
+          description: g.description || '',
+          memberCount: g.approximate_member_count || d.approximate_member_count || 0,
+          onlineCount: d.approximate_presence_count || 0,
+          splash: g.splash ? `https://cdn.discordapp.com/splashes/${g.id}/${g.splash}.png?size=512` : null,
+          banner: g.banner ? `https://cdn.discordapp.com/banners/${g.id}/${g.banner}.png?size=512` : null,
+          features: g.features || [],
+          verificationLevel: g.verification_level || 0,
+          nsfw: g.nsfw || false,
+          mfaLevel: g.mfa_level || 0,
+          vanityUrl: g.vanity_url_code || null
+        },
+        inviter: d.inviter ? { username: d.inviter.username, id: d.inviter.id, discriminator: d.inviter.discriminator || '0', avatar: d.inviter.avatar ? `https://cdn.discordapp.com/avatars/${d.inviter.id}/${d.inviator?.avatar}.${d.inviter.avatar.startsWith('a_') ? 'gif' : 'png'}` : null, createdAt: d.inviter.created_at || '' } : null,
+        expiresAt: d.expires_at || null,
+        channel: d.channel ? { name: d.channel.name || '', id: d.channel.id || '', type: d.channel.type || 0 } : null
+      });
+    } else if (r.status === 404) { res.status(404).json({ error: 'Invite nicht gefunden oder abgelaufen' }); }
+    else { res.status(r.status).json({ error: 'Discord API Fehler: ' + r.status }); }
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ============= ROBLOX OSINT =============
+app.post('/api/osint/roblox', async (req, res) => {
+  const { username, userId } = req.body;
+  const query = userId || username;
+  if (!query) return res.status(400).json({ error: 'Username oder User-ID nötig' });
+  const result = { user: null, avatar: null, friends: null, groups: [], stats: null, error: null };
+  try {
+    let uid = userId;
+    if (!uid) {
+      const search = await httpGet(`https://users.roblox.com/v1/usernames/users`, { timeout: 8000, method: 'POST', body: JSON.stringify({ usernames: [username] }), headers: { 'Content-Type': 'application/json' } });
+      if (search.status === 200) {
+        const d = JSON.parse(search.body);
+        if (d.data && d.data.length > 0) uid = d.data[0].id.toString();
+      }
+    }
+    if (!uid) { result.error = 'User nicht gefunden'; return res.json(result); }
+    const profile = await httpGet(`https://users.roblox.com/v1/users/${uid}`, { timeout: 8000 });
+    if (profile.status === 200) {
+      const p = JSON.parse(profile.body);
+      result.user = { id: p.id, name: p.name, displayName: p.displayName, description: p.description || '', created: p.created, externalAppDisplayName: p.externalAppDisplayName || null, isBanned: p.isBanned || false, hasVerifiedBadge: p.hasVerifiedBadge || false };
+    }
+    const thumb = await httpGet(`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${uid}&size=420x420&format=Png&isCircular=false`, { timeout: 8000 });
+    if (thumb.status === 200) {
+      const t = JSON.parse(thumb.body);
+      if (t.data && t.data.length > 0) result.avatar = t.data[0].imageUrl;
+    }
+    const fullThumb = await httpGet(`https://thumbnails.roblox.com/v1/users/avatar?userIds=${uid}&size=720x720&format=Png`, { timeout: 8000 });
+    if (fullThumb.status === 200) {
+      const ft = JSON.parse(fullThumb.body);
+      if (ft.data && ft.data.length > 0) result.fullAvatar = ft.data[0].imageUrl;
+    }
+    const friends = await httpGet(`https://friends.roblox.com/v1/users/${uid}/friends/count`, { timeout: 8000 });
+    if (friends.status === 200) { const f = JSON.parse(friends.body); result.friends = { count: f.count || 0 }; }
+    const followers = await httpGet(`https://friends.roblox.com/v1/users/${uid}/followers/count`, { timeout: 8000 });
+    if (followers.status === 200) { const f = JSON.parse(followers.body); result.followers = { count: f.count || 0 }; }
+    const followings = await httpGet(`https://friends.roblox.com/v1/users/${uid}/followings/count`, { timeout: 8000 });
+    if (followings.status === 200) { const f = JSON.parse(followings.body); result.following = { count: f.count || 0 }; }
+    const presence = await httpGet(`https://presence.roblox.com/v1/presence/users`, { timeout: 5000, method: 'POST', body: JSON.stringify({ userIds: [parseInt(uid)] }), headers: { 'Content-Type': 'application/json' } });
+    if (presence.status === 200) { const pr = JSON.parse(presence.body); if (pr.userPresences && pr.userPresences.length > 0) { const pp = pr.userPresences[0]; result.presence = { status: ['Offline','Online','InGame','InStudio'][pp.userPresenceType] || 'Unknown', lastLocation: pp.lastLocation || '', placeId: pp.placeId || null, universeId: pp.universeId || null }; } }
+    const groups = await httpGet(`https://groups.roblox.com/v2/users/${uid}/groups/roles`, { timeout: 8000 });
+    if (groups.status === 200) { const g = JSON.parse(groups.body); if (g.data) result.groups = g.data.slice(0, 20).map(gr => ({ id: gr.group?.id, name: gr.group?.name, memberCount: gr.group?.memberCount || 0, role: gr.role?.name || '', icon: gr.group?.icon?.imageUrl || null })); }
+    const badges = await httpGet(`https://accountinformation.roblox.com/v1/users/${uid}/username-history?limit=10&sortOrder=Asc`, { timeout: 8000 });
+    if (badges.status === 200) { const b = JSON.parse(badges.body); if (b.data) result.usernameHistory = b.data.map(h => h.name); }
+    const social = await httpGet(`https://accountinformation.roblox.com/v1/users/${uid}/social-links`, { timeout: 8000 });
+    if (social.status === 200) { const s = JSON.parse(social.body); if (s.data) result.socialLinks = s.data.map(sl => ({ type: sl.type, url: sl.url, title: sl.title })); }
+    const trade = await httpGet(`https://trades.roblox.com/v1/users/${uid}/trade-value`, { timeout: 8000 });
+    if (trade.status === 200) { const t = JSON.parse(trade.body); result.tradeValue = t.estimatedTradeValue || 0; }
+    res.json(result);
+  } catch (e) { result.error = e.message; res.json(result); }
+});
+
+app.post('/api/osint/roblox/game', async (req, res) => {
+  const { placeId } = req.body;
+  if (!placeId) return res.status(400).json({ error: 'Place-ID nötig' });
+  try {
+    let universeId = null;
+    try {
+      const uniR = await httpGet(`https://apis.roblox.com/universes/v1/places/${placeId}/universe`, { timeout: 8000 });
+      if (uniR.status === 200) { const ud = JSON.parse(uniR.body); universeId = ud.universeId; }
+    } catch {}
+    let game = null;
+    let details = null;
+    if (universeId) {
+      try {
+        const stats = await httpGet(`https://games.roblox.com/v1/games?universeIds=${universeId}`, { timeout: 8000 });
+        if (stats.status === 200) { const d = JSON.parse(stats.body); if (d.data && d.data.length > 0) game = d.data[0]; }
+      } catch {}
+    }
+    res.json({ placeId, universeId, game, details });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get('/osint', (req, res) => res.sendFile(path.join(STATIC_DIR, 'osint.html')));
