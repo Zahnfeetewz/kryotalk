@@ -4,419 +4,464 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>kryotalk - Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     :root{--bg:#09090b;--card:#111113;--card2:#18181b;--border:#27272a;--accent:#7c3aed;--accent2:#a78bfa;--text:#fafafa;--text2:#a1a1aa;--text3:#71717a;--green:#22c55e;--red:#ef4444;--radius:12px}
-    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
+    ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
     .app{display:flex;height:100vh}
     .sidebar{width:260px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
     .sidebar-header{padding:20px;border-bottom:1px solid var(--border)}
-    .sidebar-header .logo{font-size:18px;font-weight:800}.sidebar-header .logo span{color:var(--accent)}
-    .sidebar-header .user{display:flex;align-items:center;gap:10px;margin-top:16px;padding:10px;background:var(--bg);border-radius:var(--radius);font-size:13px}
-    .sidebar-header .user .avatar-sm{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
-    .sidebar-nav{flex:1;padding:12px}
-    .sidebar-nav a{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius);font-size:14px;color:var(--text2);transition:all .2s;cursor:pointer}
-    .sidebar-nav a:hover,.sidebar-nav a.active{background:var(--bg);color:var(--text)}
-    .sidebar-nav a.active{color:var(--accent)}
+    .sidebar-header .logo{font-size:18px;font-weight:900}.sidebar-header .logo span{color:var(--accent)}
+    .sidebar-header .user{display:flex;align-items:center;gap:10px;margin-top:16px;padding:10px;background:var(--bg);border-radius:var(--radius)}
+    .sidebar-header .avatar-sm{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;overflow:hidden}
+    .sidebar-header .avatar-sm img{width:100%;height:100%;object-fit:cover}
+    .sidebar-header .uname{font-size:14px;font-weight:700}.sidebar-header .url{font-size:11px;color:var(--text3)}
+    .sidebar-nav{flex:1;padding:12px;overflow-y:auto}
+    .sidebar-nav a{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius);font-size:14px;color:var(--text2);transition:all .2s;cursor:pointer;font-weight:500;margin-bottom:2px}
+    .sidebar-nav a:hover{background:var(--bg);color:var(--text)}.sidebar-nav a.active{background:rgba(124,58,237,.1);color:var(--accent)}
+    .sidebar-nav .nav-divider{height:1px;background:var(--border);margin:8px 0}
     .sidebar-footer{padding:16px;border-top:1px solid var(--border)}
-    .sidebar-footer a{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--radius);font-size:13px;color:var(--text3);cursor:pointer;transition:color .2s}
-    .sidebar-footer a:hover{color:var(--red)}
-
-    .main{flex:1;overflow-y:auto;padding:32px}
+    .sidebar-footer a{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--radius);font-size:13px;color:var(--text3);cursor:pointer;transition:color .2s;font-weight:500}
+    .sidebar-footer a:hover{color:var(--text)}
+    .main{flex:1;overflow-y:auto;padding:32px 40px}
     .main-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:32px}
-    .main-header h1{font-size:24px;font-weight:800}
-    .main-header .actions{display:flex;gap:8px}
+    .main-header h1{font-size:24px;font-weight:900;letter-spacing:-0.5px}
 
-    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px}
-    .card h3{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
-    .card h3 .badge{font-size:11px;padding:2px 8px;border-radius:100px;background:rgba(124,58,237,.15);color:var(--accent);font-weight:600}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px}
+    .card h3{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+    .card h3 .badge{font-size:10px;padding:3px 10px;border-radius:100px;background:rgba(124,58,237,.15);color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
 
     .form-row{margin-bottom:16px}
-    .form-row label{display:block;font-size:13px;font-weight:500;color:var(--text2);margin-bottom:6px}
-    .form-row input,.form-row textarea,.form-row select{width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border .2s}
+    .form-row label{display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px}
+    .form-row input,.form-row textarea,.form-row select{width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border .2s}
     .form-row input:focus,.form-row textarea:focus{border-color:var(--accent)}
     .form-row textarea{resize:vertical;min-height:80px}
+    .form-row .hint{font-size:11px;color:var(--text3);margin-top:4px}
 
-    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:inherit}
-    .btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#6d28d9}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:inherit}
+    .btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#6d28d9;transform:translateY(-1px)}
     .btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)}.btn-outline:hover{border-color:var(--text3)}
     .btn-danger{background:transparent;color:var(--red);border:1px solid rgba(239,68,68,.3)}.btn-danger:hover{background:rgba(239,68,68,.1)}
-    .btn-sm{padding:6px 12px;font-size:12px}
-    .btn-ghost{background:transparent;color:var(--text2)}.btn-ghost:hover{color:var(--text)}
+    .btn-sm{padding:6px 12px;font-size:12px;border-radius:8px}
+    .btn-ghost{background:transparent;color:var(--text2);padding:6px 10px}.btn-ghost:hover{color:var(--text);background:rgba(255,255,255,.05)}
 
     .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 
-    .link-item{display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;transition:border .2s}
-    .link-item:hover{border-color:var(--text3)}
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+    .stat-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+    .stat-card .stat-val{font-size:28px;font-weight:900;letter-spacing:-1px}
+    .stat-card .stat-label{font-size:12px;color:var(--text3);margin-top:2px;font-weight:500}
+
+    .avatar-upload{display:flex;align-items:center;gap:16px}
+    .avatar-preview{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;overflow:hidden;flex-shrink:0;border:3px solid var(--border)}
+    .avatar-preview img{width:100%;height:100%;object-fit:cover}
+    .bg-preview{width:100%;height:160px;border-radius:var(--radius);background:var(--bg);border:1px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative}
+    .bg-preview img,.bg-preview video{width:100%;height:100%;object-fit:cover}
+    .bg-preview .bg-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4);opacity:0;transition:opacity .2s}
+    .bg-preview:hover .bg-overlay{opacity:1}
+
+    .color-row{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+    .color-input{display:flex;flex-direction:column;align-items:center;gap:6px}
+    .color-input label{font-size:11px;color:var(--text3);font-weight:500}
+    .color-input input[type=color]{width:44px;height:44px;border:2px solid var(--border);border-radius:10px;cursor:pointer;background:none;padding:0}
+    .color-input input[type=color]::-webkit-color-swatch-wrapper{padding:2px}
+    .color-input input[type=color]::-webkit-color-swatch{border:none;border-radius:8px}
+
+    .theme-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+    .theme-card{background:var(--bg);border:2px solid var(--border);border-radius:var(--radius);padding:12px;text-align:center;cursor:pointer;transition:all .2s}
+    .theme-card:hover{border-color:var(--text3)}.theme-card.active{border-color:var(--accent);background:rgba(124,58,237,.05)}
+    .theme-card .theme-preview{display:flex;gap:3px;margin-bottom:8px;justify-content:center}
+    .theme-card .theme-dot{width:16px;height:16px;border-radius:50%}
+    .theme-card .theme-name{font-size:11px;font-weight:600}
+
+    .effect-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .effect-card{background:var(--bg);border:2px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center;cursor:pointer;transition:all .2s}
+    .effect-card:hover{border-color:var(--text3)}.effect-card.active{border-color:var(--accent);background:rgba(124,58,237,.05)}
+    .effect-card .effect-icon{font-size:24px;margin-bottom:6px}
+    .effect-card .effect-name{font-size:11px;font-weight:600}
+
+    .link-item{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;transition:all .2s;cursor:grab}
+    .link-item:hover{border-color:var(--text3)}.link-item.dragging{opacity:.5;border-color:var(--accent)}
+    .link-item .link-icon{font-size:20px;width:32px;text-align:center;flex-shrink:0}
     .link-item .link-info{flex:1;min-width:0}
     .link-item .link-title{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .link-item .link-url{font-size:12px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .link-item .link-clicks{font-size:12px;color:var(--text3);white-space:nowrap}
+    .link-item .link-meta{display:flex;align-items:center;gap:8px}
+    .link-item .link-clicks{font-size:11px;color:var(--text3);white-space:nowrap;background:var(--card);padding:3px 8px;border-radius:6px}
     .link-item .link-actions{display:flex;gap:4px}
 
-    .color-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-    .color-input{display:flex;flex-direction:column;align-items:center;gap:4px}
-    .color-input label{font-size:11px;color:var(--text3)}
-    .color-input input[type=color]{width:40px;height:40px;border:2px solid var(--border);border-radius:8px;cursor:pointer;background:none;padding:0}
-    .color-input input[type=color]::-webkit-color-swatch-wrapper{padding:0}
-    .color-input input[type=color]::-webkit-color-swatch{border:none;border-radius:6px}
-
-    .avatar-upload{display:flex;align-items:center;gap:16px}
-    .avatar-preview{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;overflow:hidden;flex-shrink:0}
-    .avatar-preview img{width:100%;height:100%;object-fit:cover}
-
-    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
-    .stat-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
-    .stat-card .stat-val{font-size:24px;font-weight:800}
-    .stat-card .stat-label{font-size:12px;color:var(--text3);margin-top:2px}
-
-    .effect-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-    .effect-card{background:var(--bg);border:2px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center;cursor:pointer;transition:all .2s}
-    .effect-card:hover{border-color:var(--text3)}
-    .effect-card.active{border-color:var(--accent);background:rgba(124,58,237,.05)}
-    .effect-card .effect-icon{font-size:28px;margin-bottom:8px}
-    .effect-card .effect-name{font-size:12px;font-weight:600}
+    .social-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:6px}
+    .social-item .social-icon{font-size:18px;width:28px;text-align:center}
+    .social-item .social-url{flex:1;font-size:13px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
     .tab-bar{display:flex;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:24px}
-    .tab-bar button{flex:1;padding:10px;background:transparent;border:none;color:var(--text3);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
+    .tab-bar button{flex:1;padding:11px;background:transparent;border:none;color:var(--text3);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
     .tab-bar button.active{background:var(--accent);color:#fff}
 
     .tab-content{display:none}.tab-content.active{display:block}
 
-    .upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:40px;text-align:center;cursor:pointer;transition:border .2s}
-    .upload-zone:hover{border-color:var(--accent)}
-    .upload-zone .icon{font-size:36px;margin-bottom:12px}
-    .upload-zone p{font-size:14px;color:var(--text2)}
+    .upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:48px;text-align:center;cursor:pointer;transition:all .2s}
+    .upload-zone:hover{border-color:var(--accent);background:rgba(124,58,237,.02)}
+    .upload-zone .icon{font-size:40px;margin-bottom:12px}
+    .upload-zone p{font-size:15px;color:var(--text2);font-weight:500}
     .upload-zone .hint{font-size:12px;color:var(--text3);margin-top:4px}
 
-    .toast{position:fixed;bottom:24px;right:24px;background:var(--green);color:#fff;padding:12px 24px;border-radius:var(--radius);font-size:14px;font-weight:600;z-index:300;transform:translateY(100px);opacity:0;transition:all .3s}
-    .toast.show{transform:translateY(0);opacity:1}
-    .toast.error{background:var(--red)}
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--green);color:#fff;padding:14px 24px;border-radius:var(--radius);font-size:14px;font-weight:600;z-index:300;transform:translateY(100px);opacity:0;transition:all .3s;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+    .toast.show{transform:translateY(0);opacity:1}.toast.error{background:var(--red)}
+
+    .toggle{position:relative;width:44px;height:24px;background:var(--border);border-radius:12px;cursor:pointer;transition:background .2s}
+    .toggle.on{background:var(--accent)}
+    .toggle::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform .2s}
+    .toggle.on::after{transform:translateX(20px)}
+
+    .inline-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(39,39,42,.5)}
+    .inline-row:last-child{border:none}
+    .inline-row .label{font-size:14px;font-weight:500}.inline-row .desc{font-size:12px;color:var(--text3)}
+
+    .empty-state{text-align:center;padding:48px 20px;color:var(--text3)}
+    .empty-state .icon{font-size:48px;margin-bottom:12px}
+    .empty-state p{font-size:14px}
 
     @media(max-width:768px){
-      .sidebar{display:none}
-      .main{padding:16px}
+      .sidebar{display:none}.main{padding:16px}
       .stats-grid{grid-template-columns:repeat(2,1fr)}
-      .grid-2,.grid-3{grid-template-columns:1fr}
+      .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+      .theme-grid{grid-template-columns:repeat(3,1fr)}
       .effect-grid{grid-template-columns:repeat(2,1fr)}
     }
   </style>
 </head>
 <body>
-
 <div class="app">
   <div class="sidebar">
     <div class="sidebar-header">
       <div class="logo">kryo<span>talk</span></div>
-      <div class="user"><div class="avatar-sm" id="sideAvatar">?</div><div><div style="font-weight:600" id="sideUsername">...</div><div style="font-size:11px;color:var(--text3)" id="sideUrl"></div></div></div>
+      <div class="user"><div class="avatar-sm" id="sideAvatar">?</div><div><div class="uname" id="sideUsername">...</div><div class="url" id="sideUrl"></div></div></div>
     </div>
     <div class="sidebar-nav">
-      <a class="active" onclick="showTab('dashboard')" id="navDashboard">📊 Dashboard</a>
+      <a class="active" onclick="showTab('dashboard')" id="navDashboard">📊 Übersicht</a>
       <a onclick="showTab('links')" id="navLinks">🔗 Links</a>
-      <a onclick="showTab('customize')" id="navCustomize">🎨 Customizer</a>
+      <a onclick="showTab('socials')" id="navSocials">💬 Socials</a>
+      <div class="nav-divider"></div>
+      <a onclick="showTab('customize')" id="navCustomize">🎨 Theme & Farben</a>
+      <a onclick="showTab('background')" id="navBackground">🖼️ Hintergrund</a>
       <a onclick="showTab('effects')" id="navEffects">✨ Effekte</a>
+      <a onclick="showTab('avatar')" id="navAvatar">👤 Avatar</a>
+      <div class="nav-divider"></div>
       <a onclick="showTab('files')" id="navFiles">📁 Dateien</a>
+      <a onclick="showTab('advanced')" id="navAdvanced">⚙️ Erweitert</a>
     </div>
     <div class="sidebar-footer">
       <a onclick="window.open('/'+username,'_blank')">👁️ Profil ansehen</a>
+      <a onclick="window.open('/embed/'+username,'_blank')">📋 Embed Code</a>
       <a onclick="doLogout()">🚪 Abmelden</a>
     </div>
   </div>
 
   <div class="main">
+    <!-- DASHBOARD -->
     <div id="tabDashboard" class="tab-content active">
-      <div class="main-header">
-        <h1>Dashboard</h1>
-        <div class="actions">
-          <a class="btn btn-outline" id="profileLink" href="#" target="_blank">Profil ansehen</a>
-        </div>
-      </div>
+      <div class="main-header"><h1>Übersicht</h1><a class="btn btn-outline" id="profileLink" href="#" target="_blank">Profil ansehen →</a></div>
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-val" id="dViews">0</div><div class="stat-label">Aufrufe</div></div>
         <div class="stat-card"><div class="stat-val" id="dLinks">0</div><div class="stat-label">Links</div></div>
         <div class="stat-card"><div class="stat-val" id="dClicks">0</div><div class="stat-label">Klicks</div></div>
         <div class="stat-card"><div class="stat-val" id="dBadge">Free</div><div class="stat-label">Plan</div></div>
       </div>
-      <div class="card">
-        <h3>Avatar & Bio</h3>
-        <div class="avatar-upload">
-          <div class="avatar-preview" id="avatarPreview">?</div>
-          <div>
-            <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
-            <button class="btn btn-outline btn-sm" onclick="document.getElementById('avatarInput').click()">Avatar ändern</button>
-            <p style="font-size:12px;color:var(--text3);margin-top:6px">JPG, PNG. Max 5MB.</p>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Avatar & Bio</h3>
+          <div class="avatar-upload">
+            <div class="avatar-preview" id="dashAvatar">?</div>
+            <div><input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="uploadAvatar(this)"><button class="btn btn-outline btn-sm" onclick="document.getElementById('avatarInput').click()">Avatar hochladen</button><p style="font-size:11px;color:var(--text3);margin-top:4px">JPG, PNG, GIF. Max 5MB.</p></div>
           </div>
+          <div class="form-row" style="margin-top:16px"><label>Bio</label><textarea id="bioInput" placeholder="Erzähl etwas über dich..." maxlength="300"></textarea><div class="hint"><span id="bioCount">0</span>/300 Zeichen</div></div>
+          <button class="btn btn-primary" onclick="saveProfile()">Speichern</button>
         </div>
-        <div class="form-row" style="margin-top:16px">
-          <label>Bio</label>
-          <textarea id="bioInput" placeholder="Erzähl etwas über dich..." maxlength="200"></textarea>
+        <div class="card">
+          <h3>Vorschau</h3>
+          <div id="miniPreview" style="background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:24px;text-align:center"></div>
         </div>
-        <button class="btn btn-primary" onclick="saveProfile()">Speichern</button>
       </div>
     </div>
 
+    <!-- LINKS -->
     <div id="tabLinks" class="tab-content">
-      <div class="main-header">
-        <h1>Links verwalten</h1>
-        <div class="actions"><button class="btn btn-primary" onclick="showAddLink()">+ Link hinzufügen</button></div>
-      </div>
+      <div class="main-header"><h1>Links verwalten</h1><button class="btn btn-primary" onclick="showAddLink()">+ Link hinzufügen</button></div>
       <div id="addLinkForm" style="display:none" class="card">
         <h3>Neuer Link</h3>
         <div class="grid-2">
           <div class="form-row"><label>Titel</label><input type="text" id="newLinkTitle" placeholder="Meine Website"></div>
           <div class="form-row"><label>URL</label><input type="url" id="newLinkUrl" placeholder="https://example.com"></div>
         </div>
-        <div class="form-row"><label>Icon (optional)</label><input type="text" id="newLinkIcon" placeholder="Emoji oder Text"></div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" onclick="addLink()">Hinzufügen</button>
-          <button class="btn btn-ghost" onclick="document.getElementById('addLinkForm').style.display='none'">Abbrechen</button>
+        <div class="grid-2">
+          <div class="form-row"><label>Icon (Emoji)</label><input type="text" id="newLinkIcon" placeholder="🔗" maxlength="4"></div>
+          <div class="form-row"><label>In neuem Tab öffnen?</label><select id="newLinkTab"><option value="true">Ja</option><option value="false">Nein</option></select></div>
         </div>
+        <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="addLink()">Hinzufügen</button><button class="btn btn-ghost" onclick="document.getElementById('addLinkForm').style.display='none'">Abbrechen</button></div>
       </div>
       <div id="linksList"></div>
     </div>
 
+    <!-- SOCIALS -->
+    <div id="tabSocials" class="tab-content">
+      <div class="main-header"><h1>Social Media Links</h1></div>
+      <div class="card">
+        <h3>Neues Social hinzufügen</h3>
+        <div class="grid-2" style="margin-bottom:12px">
+          <div class="form-row"><label>Platform</label><select id="socialPlatform"><option value="instagram">Instagram</option><option value="twitter">Twitter / X</option><option value="tiktok">TikTok</option><option value="youtube">YouTube</option><option value="discord">Discord</option><option value="twitch">Twitch</option><option value="spotify">Spotify</option><option value="linkedin">LinkedIn</option><option value="snapchat">Snapchat</option><option value="reddit">Reddit</option><option value="pinterest">Pinterest</option><option value="facebook">Facebook</option><option value="soundcloud">SoundCloud</option><option value="github">GitHub</option><option value="telegram">Telegram</option><option value="email">E-Mail</option><option value="website">Website</option></select></div>
+          <div class="form-row"><label>URL</label><input type="url" id="socialUrl" placeholder="https://..."></div>
+        </div>
+        <button class="btn btn-primary" onclick="addSocial()">Hinzufügen</button>
+      </div>
+      <div id="socialsList"></div>
+    </div>
+
+    <!-- CUSTOMIZE -->
     <div id="tabCustomize" class="tab-content">
-      <div class="main-header">
-        <h1>Customizer</h1>
-        <div class="actions"><button class="btn btn-primary" onclick="saveProfile()">Speichern</button></div>
+      <div class="main-header"><h1>Theme & Farben</h1><button class="btn btn-primary" onclick="saveProfile()">Speichern</button></div>
+      <div class="card">
+        <h3>Theme Presets</h3>
+        <div class="theme-grid" id="themeGrid"></div>
       </div>
       <div class="card">
-        <h3>Farben</h3>
+        <h3>Individuelle Farben</h3>
         <div class="color-row">
           <div class="color-input"><input type="color" id="themeBg" value="#0a0a0a"><label>Hintergrund</label></div>
-          <div class="color-input"><input type="color" id="themeCardBg" value="#1a1a2e"><label>Karten</label></div>
-          <div class="color-input"><input type="color" id="themeAccent" value="#7c3aed"><label>Akzent</label></div>
+          <div class="color-input"><input type="color" id="themeCardBg" value="#18181b"><label>Karten</label></div>
+          <div class="color-input"><input type="color" id="themeCardBorder" value="#27272a"><label>Rahmen</label></div>
+          <div class="color-input"><input type="color" id="themeAccent" value="#7c3aed"><label>Akzent 1</label></div>
+          <div class="color-input"><input type="color" id="themeAccent2" value="#a78bfa"><label>Akzent 2</label></div>
           <div class="color-input"><input type="color" id="themeText" value="#ffffff"><label>Text</label></div>
+          <div class="color-input"><input type="color" id="themeText2" value="#a1a1aa"><label>Text 2</label></div>
         </div>
       </div>
       <div class="card">
         <h3>Layout</h3>
         <div class="grid-3">
-          <div class="effect-card active" onclick="setLayout('default',this)" data-layout="default"><div class="effect-icon">📱</div><div class="effect-name">Standard</div></div>
-          <div class="effect-card" onclick="setLayout('grid',this)" data-layout="grid"><div class="effect-icon">🔲</div><div class="effect-name">Grid</div></div>
-          <div class="effect-card" onclick="setLayout('minimal',this)" data-layout="minimal"><div class="effect-icon">◻️</div><div class="effect-name">Minimal</div></div>
+          <div class="effect-card active" onclick="setLayout('centered',this)" data-layout="centered"><div class="effect-icon">⬛</div><div class="effect-name">Zentriert</div></div>
+          <div class="effect-card" onclick="setLayout('left',this)" data-layout="left"><div class="effect-icon">◀️</div><div class="effect-name">Linksbündig</div></div>
+          <div class="effect-card" onclick="setLayout('compact',this)" data-layout="compact"><div class="effect-icon">▪️</div><div class="effect-name">Kompakt</div></div>
         </div>
-      </div>
-    </div>
-
-    <div id="tabEffects" class="tab-content">
-      <div class="main-header">
-        <h1>Profile Effects</h1>
-        <div class="actions"><button class="btn btn-primary" onclick="saveProfile()">Speichern</button></div>
       </div>
       <div class="card">
-        <h3>Hintergrund-Effekte <span class="badge">Premium</span></h3>
-        <div class="effect-grid">
-          <div class="effect-card active" onclick="setEffect('none',this)"><div class="effect-icon">⬜</div><div class="effect-name">Keiner</div></div>
-          <div class="effect-card" onclick="setEffect('rain',this)"><div class="effect-icon">🌧️</div><div class="effect-name">Regen</div></div>
-          <div class="effect-card" onclick="setEffect('snow',this)"><div class="effect-icon">❄️</div><div class="effect-name">Schnee</div></div>
-          <div class="effect-card" onclick="setEffect('stars',this)"><div class="effect-icon">⭐</div><div class="effect-name">Sterne</div></div>
-          <div class="effect-card" onclick="setEffect('particles',this)"><div class="effect-icon">✨</div><div class="effect-name">Partikel</div></div>
-          <div class="effect-card" onclick="setEffect('matrix',this)"><div class="effect-icon">🟢</div><div class="effect-name">Matrix</div></div>
+        <h3>Link-Stil</h3>
+        <div class="grid-4">
+          <div class="effect-card active" onclick="setLinkStyle('glass',this)" data-ls="glass"><div class="effect-icon">🪟</div><div class="effect-name">Glass</div></div>
+          <div class="effect-card" onclick="setLinkStyle('solid',this)" data-ls="solid"><div class="effect-icon">⬛</div><div class="effect-name">Solid</div></div>
+          <div class="effect-card" onclick="setLinkStyle('outline',this)" data-ls="outline"><div class="effect-icon">⬜</div><div class="effect-name">Outline</div></div>
+          <div class="effect-card" onclick="setLinkStyle('gradient',this)" data-ls="gradient"><div class="effect-icon">🌈</div><div class="effect-name">Gradient</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Schriftart</h3>
+        <select id="fontSelect" onchange="document.getElementById('fontHint').textContent='Aktuell: '+this.value" style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:inherit">
+          <option value="Inter">Inter</option><option value="Poppins">Poppins</option><option value="Montserrat">Montserrat</option><option value="Raleway">Raleway</option><option value="Outfit">Outfit</option><option value="Space Grotesk">Space Grotesk</option><option value="JetBrains Mono">JetBrains Mono</option><option value="Playfair Display">Playfair Display</option>
+        </select>
+        <div class="hint" id="fontHint">Aktuell: Inter</div>
+      </div>
+    </div>
+
+    <!-- BACKGROUND -->
+    <div id="tabBackground" class="tab-content">
+      <div class="main-header"><h1>Hintergrund</h1><button class="btn btn-primary" onclick="saveProfile()">Speichern</button></div>
+      <div class="card">
+        <h3>Hintergrund-Typ</h3>
+        <div class="grid-3" style="margin-bottom:16px">
+          <div class="effect-card active" onclick="setBgType('color',this)" data-bt="color"><div class="effect-icon">🎨</div><div class="effect-name">Farbe</div></div>
+          <div class="effect-card" onclick="setBgType('gradient',this)" data-bt="gradient"><div class="effect-icon">🌈</div><div class="effect-name">Gradient</div></div>
+          <div class="effect-card" onclick="setBgType('image',this)" data-bt="image"><div class="effect-icon">🖼️</div><div class="effect-name">Bild</div></div>
+        </div>
+        <div id="bgColorPicker" class="color-row">
+          <div class="color-input"><input type="color" id="bgColor" value="#0a0a0a"><label>Hintergrundfarbe</label></div>
+        </div>
+        <div id="bgGradientPicker" style="display:none">
+          <div class="grid-2">
+            <div class="form-row"><label>Farbe 1</label><input type="color" id="bgGrad1" value="#7c3aed" style="width:100%;height:44px;border:1px solid var(--border);border-radius:10px;cursor:pointer;background:none"></div>
+            <div class="form-row"><label>Farbe 2</label><input type="color" id="bgGrad2" value="#ec4899" style="width:100%;height:44px;border:1px solid var(--border);border-radius:10px;cursor:pointer;background:none"></div>
+          </div>
+          <div class="form-row"><label>Richtung (Grad)</label><input type="range" id="bgGradAngle" min="0" max="360" value="135" style="width:100%"><div class="hint" id="bgGradAngleVal">135°</div></div>
+        </div>
+        <div id="bgImagePicker" style="display:none">
+          <div class="upload-zone" onclick="document.getElementById('bgInput').click()" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor=''" ondrop="event.preventDefault();uploadBg(this.files?.[0]||event.dataTransfer.files[0])"><div class="icon">📤</div><p>Bild oder Video hochladen</p><div class="hint">JPG, PNG, GIF, WebP, MP4, WebM. Max 50MB.</div></div>
+          <input type="file" id="bgInput" accept="image/*,video/*" style="display:none" onchange="uploadBg(this.files[0])">
+          <div class="bg-preview" id="bgPreview" style="margin-top:12px;display:none"><img id="bgPreviewImg"><video id="bgPreviewVid" style="display:none" muted loop playsinline></video><div class="bg-overlay"><button class="btn btn-danger btn-sm" onclick="removeBg()">Entfernen</button></div></div>
+          <div class="form-row" style="margin-top:12px"><label>Oder URL eingeben (Bild oder Video)</label><input type="url" id="bgUrl" placeholder="https://example.com/video.mp4"></div>
+          <button class="btn btn-outline" onclick="setBgUrl()" style="margin-top:8px">URL verwenden</button>
         </div>
       </div>
     </div>
 
-    <div id="tabFiles" class="tab-content">
-      <div class="main-header">
-        <h1>Datei-Hosting</h1>
+    <!-- EFFECTS -->
+    <div id="tabEffects" class="tab-content">
+      <div class="main-header"><h1>Hintergrund-Effekte</h1><button class="btn btn-primary" onclick="saveProfile()">Speichern</button></div>
+      <div class="card">
+        <h3>Effekte <span class="badge">Premium</span></h3>
+        <p style="font-size:13px;color:var(--text3);margin-bottom:16px">Wähle einen animierten Effekt für dein Profil.</p>
+        <div class="effect-grid" id="effectGrid"></div>
       </div>
+    </div>
+
+    <!-- AVATAR -->
+    <div id="tabAvatar" class="tab-content">
+      <div class="main-header"><h1>Avatar-Effekte</h1><button class="btn btn-primary" onclick="saveProfile()">Speichern</button></div>
+      <div class="card">
+        <h3>Avatar</h3>
+        <div class="avatar-upload" style="margin-bottom:20px">
+          <div class="avatar-preview" id="avatarTabPreview" style="width:100px;height:100px;font-size:36px">?</div>
+          <div><input type="file" id="avatarInput2" accept="image/*" style="display:none" onchange="uploadAvatar(this)"><button class="btn btn-outline" onclick="document.getElementById('avatarInput2').click()">Avatar hochladen</button></div>
+        </div>
+        <h3>Effekte</h3>
+        <div class="inline-row"><div><div class="label">Glow-Effekt</div><div class="desc">Leuchtender Rahmen um den Avatar</div></div><div class="toggle on" id="toggleGlow" onclick="toggleSwitch(this)"></div></div>
+        <div class="inline-row"><div><div class="label">Pulse-Animation</div><div class="desc">Sanftes Pulsieren des Avatars</div></div><div class="toggle" id="togglePulse" onclick="toggleSwitch(this)"></div></div>
+        <div class="inline-row"><div><div class="label">Border</div><div class="desc">Akzent-Border um den Avatar</div></div><div class="toggle on" id="toggleBorder" onclick="toggleSwitch(this)"></div></div>
+      </div>
+    </div>
+
+    <!-- FILES -->
+    <div id="tabFiles" class="tab-content">
+      <div class="main-header"><h1>Datei-Hosting</h1></div>
       <div class="card">
         <h3>Datei hochladen</h3>
-        <div class="upload-zone" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor=''" ondrop="event.preventDefault();this.style.borderColor='';handleFileDrop(event)">
-          <div class="icon">📤</div>
-          <p>Datei hierher ziehen oder klicken</p>
-          <div class="hint">Bilder, Videos, Dokumente. Max 10MB.</div>
-        </div>
+        <div class="upload-zone" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor=''" ondrop="event.preventDefault();uploadFile(event.dataTransfer.files[0])"><div class="icon">📤</div><p>Datei hierher ziehen oder klicken</p><div class="hint">Bilder, Videos, Dokumente. Max 50MB.</div></div>
         <input type="file" id="fileInput" style="display:none" onchange="uploadFile(this.files[0])">
       </div>
-      <div id="filesList" class="card" style="display:none">
-        <h3>Hochgeladene Dateien</h3>
-        <div id="filesContent"></div>
+      <div id="filesList" class="card" style="display:none"><h3>Hochgeladene Dateien</h3><div id="filesContent"></div></div>
+    </div>
+
+    <!-- ADVANCED -->
+    <div id="tabAdvanced" class="tab-content">
+      <div class="main-header"><h1>Erweitert</h1><button class="btn btn-primary" onclick="saveProfile()">Speichern</button></div>
+      <div class="card">
+        <h3>SEO Metadata</h3>
+        <div class="form-row"><label>Seitentitel</label><input type="text" id="seoTitle" placeholder="Mein Profil - kryotalk" maxlength="60"></div>
+        <div class="form-row"><label>Beschreibung</label><textarea id="seoDesc" placeholder="Beschreibe dein Profil..." maxlength="160"></textarea></div>
+        <div class="form-row"><label>OG Bild URL</label><input type="url" id="seoOgImage" placeholder="https://example.com/image.jpg"></div>
+      </div>
+      <div class="card">
+        <h3>Typewriter Bio <span class="badge">Premium</span></h3>
+        <select id="bioAnimSelect" style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:inherit">
+          <option value="none">Keine Animation</option><option value="typewriter">Typewriter</option><option value="fade">Fade In</option><option value="slide">Slide Up</option><option value="glitch">Glitch</option>
+        </select>
+      </div>
+      <div class="card">
+        <h3>Music Player <span class="badge">Premium</span></h3>
+        <div class="form-row"><label>Spotify / SoundCloud / MP3 URL</label><input type="url" id="musicUrl" placeholder="https://open.spotify.com/track/..."></div>
+        <div class="inline-row"><div><div class="label">Autoplay</div><div class="desc">Musik startet automatisch (Browser können das blockieren)</div></div><div class="toggle" id="toggleMusicAutoplay" onclick="toggleSwitch(this)"></div></div>
+      </div>
+      <div class="card">
+        <h3>Custom CSS <span class="badge">Premium</span></h3>
+        <div class="form-row"><textarea id="customCSS" placeholder=".profile { background: red; }" style="font-family:'JetBrains Mono',monospace;font-size:13px;min-height:120px" spellcheck="false"></textarea><div class="hint">Eigenes CSS für volle Kontrolle über dein Design.</div></div>
+      </div>
+      <div class="card">
+        <h3>Sichtbarkeit</h3>
+        <div class="inline-row"><div><div class="label">Profil sichtbar</div><div class="desc">Profil für andere Nutzer sichtbar</div></div><div class="toggle on" id="toggleVisibility" onclick="toggleSwitch(this)"></div></div>
+        <div class="inline-row"><div><div class="label">Passwort-Schutz <span class="badge">Premium</span></div><div class="desc">Nur mit Passwort zugänglich</div></div><div class="toggle" id="togglePassProtect" onclick="toggleSwitch(this)"></div></div>
+        <div class="form-row" id="passProtectRow" style="display:none"><label>Profil-Passwort</label><input type="password" id="profilePassword" placeholder="••••••••"></div>
+      </div>
+      <div class="card">
+        <h3>Profil löschen</h3>
+        <p style="font-size:13px;color:var(--text3);margin-bottom:12px">Dies kann nicht rückgängig gemacht werden.</p>
+        <button class="btn btn-danger" onclick="if(confirm('WIRKLICH löschen? Gib \"LÖSCHEN\" ein:')&&prompt(' Gib \"LÖSCHEN\" ein:')==='LÖSCHEN'){fetch('/api/account',{method:'DELETE'}).then(()=>window.location.href='/')}">Profil löschen</button>
       </div>
     </div>
   </div>
 </div>
-
 <div class="toast" id="toast"></div>
 
 <script>
-let username='', profile={}, links=[];
+let username='',profile={},links=[],socials=[];
+const THEMES={midnight:{bg:'#0a0a0a',cardBg:'#18181b',cardBorder:'#27272a',accent:'#7c3aed',accent2:'#a78bfa',textColor:'#ffffff',textSecondary:'#a1a1aa'},ocean:{bg:'#0c1222',cardBg:'#111b2e',cardBorder:'#1e2d4a',accent:'#0ea5e9',accent2:'#38bdf8',textColor:'#f0f9ff',textSecondary:'#7dd3fc'},sunset:{bg:'#1a0a0a',cardBg:'#2a1111',cardBorder:'#3d1c1c',accent:'#f97316',accent2:'#fb923c',textColor:'#fff7ed',textSecondary:'#fdba74'},forest:{bg:'#0a1a0a',cardBg:'#112a11',cardBorder:'#1c3d1c',accent:'#22c55e',accent2:'#4ade80',textColor:'#f0fdf4',textSecondary:'#86efac'},neon:{bg:'#0a0a14',cardBg:'#12121f',cardBorder:'#1e1e3a',accent:'#e879f9',accent2:'#f0abfc',textColor:'#faf5ff',textSecondary:'#d8b4fe'},fire:{bg:'#140a0a',cardBg:'#201111',cardBorder:'#3a1c1c',accent:'#ef4444',accent2:'#f87171',textColor:'#fef2f2',textSecondary:'#fca5a5'},arctic:{bg:'#f0f4f8',cardBg:'#ffffff',cardBorder:'#e2e8f0',accent:'#0284c7',accent2:'#38bdf8',textColor:'#0f172a',textSecondary:'#64748b'},sakura:{bg:'#1a0f14',cardBg:'#2a1520',cardBorder:'#3d2030',accent:'#ec4899',accent2:'#f472b6',textColor:'#fdf2f8',textSecondary:'#f9a8d4'},vaporwave:{bg:'#120428',cardBg:'#1a0838',cardBorder:'#2d1058',accent:'#a855f7',accent2:'#c084fc',textColor:'#faf5ff',textSecondary:'#d8b4fe'},midnightBlue:{bg:'#020617',cardBg:'#0f172a',cardBorder:'#1e293b',accent:'#6366f1',accent2:'#818cf8',textColor:'#f8fafc',textSecondary:'#94a3b8'}};
+const EFFECTS=[{id:'none',icon:'⬜',name:'Keiner'},{id:'rain',icon:'🌧️',name:'Regen'},{id:'snow',icon:'❄️',name:'Schnee'},{id:'stars',icon:'⭐',name:'Sterne'},{id:'particles',icon:'✨',name:'Partikel'},{id:'matrix',icon:'🟢',name:'Matrix'},{id:'fireflies',icon:'🔥',name:'Fireflies'},{id:'confetti',icon:'🎊',name:'Konfetti'}];
+const SOCIAL_ICONS={instagram:'📷',twitter:'🐦',tiktok:'🎵',youtube:'🎬',discord:'💬',twitch:'🎮',spotify:'🎧',linkedin:'💼',snapchat:'👻',reddit:'🔴',pinterest:'📌',facebook:'👤',soundcloud:'🔊',github:'🐙',telegram:'✈️',email:'📧',website:'🌐'};
 
-function showToast(msg, error){
-  const t=document.getElementById('toast');
-  t.textContent=msg;
-  t.className='toast'+(error?' error':'')+' show';
-  setTimeout(()=>t.className='toast',3000);
-}
+function showToast(m,e){const t=document.getElementById('toast');t.textContent=m;t.className='toast'+(e?' error':'')+' show';setTimeout(()=>t.className='toast',3000)}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function toggleSwitch(el){el.classList.toggle('on')}
+function isOn(id){return document.getElementById(id)?.classList.contains('on')}
 
 async function init(){
-  try{
-    const r=await fetch('/api/me');
-    if(!r.ok){window.location.href='/';return}
-    const d=await r.json();
-    username=d.username;
-    profile=d.profile||{};
-    links=profile.links||[];
-    document.getElementById('sideUsername').textContent=username;
-    document.getElementById('sideUrl').textContent='kryotalk.app/'+username;
-    document.getElementById('sideAvatar').textContent=username.charAt(0).toUpperCase();
-    document.getElementById('profileLink').href='/'+username;
-    if(profile.avatar){document.getElementById('avatarPreview').innerHTML='<img src="'+profile.avatar+'">';document.getElementById('sideAvatar').innerHTML='<img src="'+profile.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'}
-    document.getElementById('bioInput').value=profile.bio||'';
-    document.getElementById('dViews').textContent=profile.views||0;
-    document.getElementById('dLinks').textContent=links.length;
-    document.getElementById('dClicks').textContent=links.reduce((s,l)=>s+(l.clicks||0),0);
-    document.getElementById('dBadge').textContent=d.premium?'Premium':'Free';
-    if(profile.theme){
-      document.getElementById('themeBg').value=profile.theme.bg||'#0a0a0a';
-      document.getElementById('themeCardBg').value=profile.theme.cardBg||'#1a1a2e';
-      document.getElementById('themeAccent').value=profile.theme.accent||'#7c3aed';
-      document.getElementById('themeText').value=profile.theme.textColor||'#ffffff';
-    }
-    if(profile.layout){
-      document.querySelectorAll('[data-layout]').forEach(el=>{el.classList.toggle('active',el.dataset.layout===profile.layout)});
-    }
-    if(profile.effects){
-      const active=Object.keys(profile.effects).find(k=>profile.effects[k]);
-      if(active){
-        document.querySelectorAll('.effect-card').forEach(el=>{
-          const name=el.onclick.toString().match(/setEffect\('(\w+)'/)?.[1];
-          el.classList.toggle('active',name===active);
-        });
-      }
-    }
-    renderLinks();
+  try{const r=await fetch('/api/me');if(!r.ok){window.location.href='/';return}const d=await r.json();
+  username=d.username;profile=d.profile||{};links=profile.links||[];socials=profile.socials||[];
+  document.getElementById('sideUsername').textContent=username;document.getElementById('sideUrl').textContent='kryotalk.app/'+username;document.getElementById('profileLink').href='/'+username;
+  if(profile.avatar){document.getElementById('sideAvatar').innerHTML='<img src="'+profile.avatar+'">';document.getElementById('dashAvatar').innerHTML='<img src="'+profile.avatar+'">';document.getElementById('avatarTabPreview').innerHTML='<img src="'+profile.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'}
+  document.getElementById('bioInput').value=profile.bio||'';document.getElementById('bioCount').textContent=(profile.bio||'').length;
+  document.getElementById('dViews').textContent=profile.views||0;document.getElementById('dLinks').textContent=links.length;document.getElementById('dClicks').textContent=links.reduce((s,l)=>s+(l.clicks||0),0);document.getElementById('dBadge').textContent=d.premium?'Premium':'Free';
+  if(profile.theme){const t=profile.theme;document.getElementById('themeBg').value=t.bg||'#0a0a0a';document.getElementById('themeCardBg').value=t.cardBg||'#18181b';document.getElementById('themeCardBorder').value=t.cardBorder||'#27272a';document.getElementById('themeAccent').value=t.accent||'#7c3aed';document.getElementById('themeAccent2').value=t.accent2||'#a78bfa';document.getElementById('themeText').value=t.textColor||'#ffffff';document.getElementById('themeText2').value=t.textSecondary||'#a1a1aa'}
+  if(profile.layout){document.querySelectorAll('[data-layout]').forEach(el=>el.classList.toggle('active',el.dataset.layout===profile.layout))}
+  if(profile.theme?.linkStyle){document.querySelectorAll('[data-ls]').forEach(el=>el.classList.toggle('active',el.dataset.ls===profile.theme.linkStyle))}
+  if(profile.effects){Object.keys(profile.effects).forEach(k=>{const el=document.querySelector('[data-effect="'+k+'"]');if(el)el.classList.toggle('active',profile.effects[k])})}
+  if(profile.avatarEffects){document.getElementById('toggleGlow').classList.toggle('on',profile.avatarEffects.glow!==false);document.getElementById('togglePulse').classList.toggle('on',!!profile.avatarEffects.pulse);document.getElementById('toggleBorder').classList.toggle('on',profile.avatarEffects.border!==false)}
+  if(profile.seo){document.getElementById('seoTitle').value=profile.seo.title||'';document.getElementById('seoDesc').value=profile.seo.description||'';document.getElementById('seoOgImage').value=profile.seo.ogImage||''}
+  if(profile.bioAnimation)document.getElementById('bioAnimSelect').value=profile.bioAnimation;
+  if(profile.musicUrl)document.getElementById('musicUrl').value=profile.musicUrl;
+  if(profile.musicAutoplay)document.getElementById('toggleMusicAutoplay').classList.add('on');
+  if(profile.customCSS)document.getElementById('customCSS').value=profile.customCSS;
+  if(profile.visibility==='hidden')document.getElementById('toggleVisibility').classList.remove('on');
+  if(profile.passwordProtect){document.getElementById('togglePassProtect').classList.add('on');document.getElementById('passProtectRow').style.display='block';document.getElementById('profilePassword').value=profile.profilePassword||''}
+  if(profile.background){showBgPreview(profile.background)}
+  renderThemeGrid();renderEffectGrid();renderLinks();renderSocials();renderMiniPreview();
   }catch(e){window.location.href='/'}
 }
 
-function showTab(tab){
-  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.sidebar-nav a').forEach(a=>a.classList.remove('active'));
-  document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active');
-  document.getElementById('nav'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active');
-}
+function showTab(tab){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.sidebar-nav a').forEach(a=>a.classList.remove('active'));const id='tab'+tab.charAt(0).toUpperCase()+tab.slice(1);const el=document.getElementById(id);if(el)el.classList.add('active');const nav=document.getElementById('nav'+tab.charAt(0).toUpperCase()+tab.slice(1));if(nav)nav.classList.add('active')}
 
-function renderLinks(){
-  const el=document.getElementById('linksList');
-  if(!links.length){el.innerHTML='<div class="card" style="text-align:center;color:var(--text3);padding:40px">Noch keine Links. Klicke "+ Link hinzufügen" um zu beginnen.</div>';return}
-  el.innerHTML=links.map(l=>`
-    <div class="link-item">
-      <div style="font-size:20px">${l.icon||'🔗'}</div>
-      <div class="link-info"><div class="link-title">${esc(l.title)}</div><div class="link-url">${esc(l.url)}</div></div>
-      <div class="link-clicks">${l.clicks||0} Klicks</div>
-      <div class="link-actions">
-        <button class="btn btn-ghost btn-sm" onclick="editLink('${l.id}')">✏️</button>
-        <button class="btn btn-ghost btn-sm" onclick="deleteLink('${l.id}')">🗑️</button>
-      </div>
-    </div>`).join('');
-}
+function renderThemeGrid(){const g=document.getElementById('themeGrid');g.innerHTML=Object.entries(THEMES).map(([n,t])=>`<div class="theme-card${(profile.theme?.bg===t.bg)?' active':''}" onclick="applyTheme('${n}',this)"><div class="theme-preview"><div class="theme-dot" style="background:${t.bg}"></div><div class="theme-dot" style="background:${t.accent}"></div><div class="theme-dot" style="background:${t.accent2}"></div></div><div class="theme-name">${n}</div></div>`).join('')}
+function applyTheme(name,el){const t=THEMES[name];if(!t)return;document.querySelectorAll('.theme-card').forEach(c=>c.classList.remove('active'));el.classList.add('active');Object.entries(t).forEach(([k,v])=>{const map={bg:'themeBg',cardBg:'themeCardBg',cardBorder:'themeCardBorder',accent:'themeAccent',accent2:'themeAccent2',textColor:'themeText',textSecondary:'themeText2'};const id=map[k];if(id)document.getElementById(id).value=v})}
 
-function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function renderEffectGrid(){const g=document.getElementById('effectGrid');g.innerHTML=EFFECTS.map(e=>`<div class="effect-card${(e.id==='none'||profile.effects?.[e.id])?' active':''}" data-effect="${e.id}" onclick="setEffect('${e.id}',this)"><div class="effect-icon">${e.icon}</div><div class="effect-name">${e.name}</div></div>`).join('')}
+function setEffect(id,el){document.querySelectorAll('#effectGrid .effect-card').forEach(e=>e.classList.remove('active'));el.classList.add('active')}
+
+function setLayout(l,el){document.querySelectorAll('[data-layout]').forEach(e=>e.classList.remove('active'));el.classList.add('active')}
+function setLinkStyle(s,el){document.querySelectorAll('[data-ls]').forEach(e=>e.classList.remove('active'));el.classList.add('active')}
+function setBgType(t,el){document.querySelectorAll('[data-bt]').forEach(e=>e.classList.remove('active'));el.classList.add('active');document.getElementById('bgColorPicker').style.display=t==='color'?'flex':'none';document.getElementById('bgGradientPicker').style.display=t==='gradient'?'block':'none';document.getElementById('bgImagePicker').style.display=t==='image'?'block':'none'}
+function removeBg(){profile.background='';document.getElementById('bgPreview').style.display='none';saveProfile()}
+
+function renderLinks(){const el=document.getElementById('linksList');if(!links.length){el.innerHTML='<div class="empty-state"><div class="icon">🔗</div><p>Noch keine Links. Klicke "+ Link hinzufügen".</p></div>';return}el.innerHTML=links.map((l,i)=>`<div class="link-item" draggable="true" data-idx="${i}" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event)"><span style="color:var(--text3);font-size:14px;cursor:grab">⠿</span><div class="link-icon">${l.icon||'🔗'}</div><div class="link-info"><div class="link-title">${esc(l.title)}</div><div class="link-url">${esc(l.url)}</div></div><div class="link-meta"><div class="link-clicks">${l.clicks||0} Klicks</div><div class="link-actions"><button class="btn btn-ghost btn-sm" onclick="editLink('${l.id}')">✏️</button><button class="btn btn-ghost btn-sm" onclick="deleteLink('${l.id}')">🗑️</button></div></div></div>`).join('')}
+
+let dragIdx=null;function dragStart(e){dragIdx=+e.currentTarget.dataset.idx;e.currentTarget.classList.add('dragging')}function dragOver(e){e.preventDefault()}function drop(e){e.preventDefault();const to=+e.currentTarget.dataset.idx;if(dragIdx!==null&&dragIdx!==to){const item=links.splice(dragIdx,1)[0];links.splice(to,0,item);const ids=links.map(l=>l.id);fetch('/api/links-order',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderedIds:ids})});renderLinks()}document.querySelectorAll('.link-item').forEach(el=>el.classList.remove('dragging'));dragIdx=null}
+
+function renderSocials(){const el=document.getElementById('socialsList');if(!socials.length){el.innerHTML='<div class="empty-state"><div class="icon">💬</div><p>Noch keine Social Links.</p></div>';return}el.innerHTML=socials.map(s=>`<div class="social-item"><div class="social-icon">${SOCIAL_ICONS[s.platform]||'🔗'}</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">${s.platform}</div><div class="social-url">${esc(s.url)}</div></div><button class="btn btn-ghost btn-sm" onclick="deleteSocial('${s.platform}')">🗑️</button></div>`).join('')}
 
 function showAddLink(){document.getElementById('addLinkForm').style.display='block';document.getElementById('newLinkTitle').focus()}
+async function addLink(){const title=document.getElementById('newLinkTitle').value.trim(),url=document.getElementById('newLinkUrl').value.trim(),icon=document.getElementById('newLinkIcon').value.trim(),newTab=document.getElementById('newLinkTab').value==='true';if(!title||!url){showToast('Titel und URL nötig',true);return}try{const r=await fetch('/api/links',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,url,icon,newTab})});const d=await r.json();if(!r.ok){showToast(d.error,true);return}links=d.links;renderLinks();document.getElementById('newLinkTitle').value='';document.getElementById('newLinkUrl').value='';document.getElementById('newLinkIcon').value='';document.getElementById('addLinkForm').style.display='none';document.getElementById('dLinks').textContent=links.length;showToast('Link hinzugefügt!')}catch(e){showToast('Fehler',true)}}
+async function deleteLink(id){if(!confirm('Link löschen?'))return;await fetch('/api/links/'+id,{method:'DELETE'});links=links.filter(l=>l.id!==id);renderLinks();document.getElementById('dLinks').textContent=links.length;showToast('Gelöscht')}
+function editLink(id){const l=links.find(x=>x.id===id);if(!l)return;const t=prompt('Titel:',l.title),u=prompt('URL:',l.url),i=prompt('Icon:',l.icon||'');if(t!==null&&u!==null){fetch('/api/links/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:t,url:u,icon:i||''})}).then(r=>r.json()).then(d=>{Object.assign(l,d.link);renderLinks();showToast('Aktualisiert')})}}
 
-async function addLink(){
-  const title=document.getElementById('newLinkTitle').value.trim();
-  const url=document.getElementById('newLinkUrl').value.trim();
-  const icon=document.getElementById('newLinkIcon').value.trim();
-  if(!title||!url){showToast('Titel und URL nötig',true);return}
-  try{
-    const r=await fetch('/api/links',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,url,icon})});
-    const d=await r.json();
-    if(!r.ok){showToast(d.error,true);return}
-    links.push(d.link);
-    renderLinks();
-    document.getElementById('newLinkTitle').value='';
-    document.getElementById('newLinkUrl').value='';
-    document.getElementById('newLinkIcon').value='';
-    document.getElementById('addLinkForm').style.display='none';
-    document.getElementById('dLinks').textContent=links.length;
-    showToast('Link hinzugefügt!');
-  }catch(e){showToast('Fehler',true)}
-}
+async function addSocial(){const platform=document.getElementById('socialPlatform').value,url=document.getElementById('socialUrl').value.trim();if(!url){showToast('URL nötig',true);return}try{await fetch('/api/socials',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({platform,url})});socials.push({platform,url});renderSocials();document.getElementById('socialUrl').value='';showToast('Hinzugefügt!')}catch(e){showToast('Fehler',true)}}
+async function deleteSocial(p){await fetch('/api/socials/'+p,{method:'DELETE'});socials=socials.filter(s=>s.platform!==p);renderSocials();showToast('Gelöscht')}
 
-async function deleteLink(id){
-  if(!confirm('Link löschen?'))return;
-  try{
-    await fetch('/api/links/'+id,{method:'DELETE'});
-    links=links.filter(l=>l.id!==id);
-    renderLinks();
-    document.getElementById('dLinks').textContent=links.length;
-    showToast('Link gelöscht');
-  }catch(e){showToast('Fehler',true)}
-}
+async function saveProfile(){const theme={bg:document.getElementById('themeBg').value,cardBg:document.getElementById('themeCardBg').value,cardBorder:document.getElementById('themeCardBorder').value,accent:document.getElementById('themeAccent').value,accent2:document.getElementById('themeAccent2').value,textColor:document.getElementById('themeText').value,textSecondary:document.getElementById('themeText2').value,linkStyle:document.querySelector('[data-ls].active')?.dataset.ls||'glass',fontFamily:document.getElementById('fontSelect').value};
+const layout=document.querySelector('[data-layout].active')?.dataset.layout||'centered';
+const effects={};const activeEffect=document.querySelector('#effectGrid .effect-card.active')?.dataset.effect;if(activeEffect&&activeEffect!=='none')effects[activeEffect]=true;
+const avatarEffects={glow:isOn('toggleGlow'),pulse:isOn('togglePulse'),border:isOn('toggleBorder')};
+const bio=document.getElementById('bioInput').value;
+const seo={title:document.getElementById('seoTitle').value,description:document.getElementById('seoDesc').value,ogImage:document.getElementById('seoOgImage').value};
+const bioAnimation=document.getElementById('bioAnimSelect').value;
+const musicUrl=document.getElementById('musicUrl').value;const musicAutoplay=isOn('toggleMusicAutoplay');
+const customCSS=document.getElementById('customCSS').value;
+const visibility=isOn('toggleVisibility')?'public':'hidden';
+const passwordProtect=isOn('togglePassProtect');const profilePassword=document.getElementById('profilePassword').value;
+try{await fetch('/api/profile',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({theme,layout,effects,avatarEffects,bio,seo,bioAnimation,musicUrl,musicAutoplay,customCSS,visibility,passwordProtect,profilePassword})});showToast('Gespeichert!');renderMiniPreview()}catch(e){showToast('Fehler',true)}}
 
-function editLink(id){
-  const link=links.find(l=>l.id===id);
-  if(!link)return;
-  const title=prompt('Titel:',link.title);
-  const url=prompt('URL:',link.url);
-  const icon=prompt('Icon:',link.icon||'');
-  if(title!==null&&url!==null){
-    fetch('/api/links/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,url,icon:icon||''})})
-    .then(r=>r.json()).then(d=>{Object.assign(link,d.link);renderLinks();showToast('Link aktualisiert')});
-  }
-}
+async function uploadAvatar(input){const file=input.files[0];if(!file)return;const fd=new FormData();fd.append('avatar',file);try{const r=await fetch('/api/avatar',{method:'POST',body:fd});const d=await r.json();if(d.ok){profile.avatar=d.avatar;['dashAvatar','avatarTabPreview','sideAvatar'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<img src="'+d.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'});showToast('Avatar aktualisiert!')}}catch(e){showToast('Upload fehlgeschlagen',true)}}
 
-async function saveProfile(){
-  const bio=document.getElementById('bioInput').value;
-  const theme={bg:document.getElementById('themeBg').value,cardBg:document.getElementById('themeCardBg').value,accent:document.getElementById('themeAccent').value,textColor:document.getElementById('themeText').value};
-  const layout=document.querySelector('[data-layout].active')?.dataset.layout||'default';
-  const effects={};
-  const activeEffect=document.querySelector('.effect-card.active .effect-name');
-  if(activeEffect){
-    const n=activeEffect.textContent;
-    if(n==='Regen')effects.rain=true;
-    else if(n==='Schnee')effects.snow=true;
-    else if(n==='Sterne')effects.stars=true;
-    else if(n==='Partikel')effects.particles=true;
-    else if(n==='Matrix')effects.matrix=true;
-  }
-  try{
-    await fetch('/api/profile',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({bio,theme,layout,effects})});
-    showToast('Profil gespeichert!');
-  }catch(e){showToast('Fehler',true)}
-}
+async function uploadBg(file){if(!file)return;const fd=new FormData();fd.append('background',file);try{const r=await fetch('/api/background',{method:'POST',body:fd});const d=await r.json();if(d.ok){profile.background=d.background;showBgPreview(d.background);showToast('Hintergrund aktualisiert!')}}catch(e){showToast('Upload fehlgeschlagen',true)}}
+function setBgUrl(){const url=document.getElementById('bgUrl').value.trim();if(url){profile.background=url;fetch('/api/profile',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({background:url})});showBgPreview(url);showToast('URL gesetzt!')}}
+function showBgPreview(src){const isV=/\.(mp4|webm|ogg|mov)(\?|$)/i.test(src);const preview=document.getElementById('bgPreview');const img=document.getElementById('bgPreviewImg');const vid=document.getElementById('bgPreviewVid');preview.style.display='block';if(isV){img.style.display='none';vid.style.display='block';vid.src=src;vid.play().catch(()=>{})}else{vid.style.display='none';img.style.display='block';img.src=src}}
 
-async function uploadAvatar(input){
-  const file=input.files[0];if(!file)return;
-  const fd=new FormData();fd.append('avatar',file);
-  try{
-    const r=await fetch('/api/avatar',{method:'POST',body:fd});
-    const d=await r.json();
-    if(d.ok){document.getElementById('avatarPreview').innerHTML='<img src="'+d.avatar+'">';showToast('Avatar aktualisiert!')}
-  }catch(e){showToast('Upload fehlgeschlagen',true)}
-}
+async function uploadFile(file){if(!file)return;const fd=new FormData();fd.append('file',file);try{const r=await fetch('/api/upload',{method:'POST',body:fd});const d=await r.json();if(d.ok){showToast('Datei hochgeladen!');const list=document.getElementById('filesList');list.style.display='block';document.getElementById('filesContent').innerHTML+=`<div class="link-item"><div class="link-icon">📄</div><div class="link-info"><div class="link-title">${esc(d.filename)}</div><div class="link-url">${window.location.origin}${d.url}</div></div><button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText('${window.location.origin}${d.url}');showToast('Link kopiert!')">📋</button></div>`}}catch(e){showToast('Upload fehlgeschlagen',true)}}
 
-async function uploadFile(file){
-  if(!file)return;
-  const fd=new FormData();fd.append('file',file);
-  try{
-    const r=await fetch('/api/upload',{method:'POST',body:fd});
-    const d=await r.json();
-    if(d.ok){
-      showToast('Datei hochgeladen!');
-      const list=document.getElementById('filesList');list.style.display='block';
-      const content=document.getElementById('filesContent');
-      content.innerHTML+=`<div class="link-item"><div style="font-size:20px">📄</div><div class="link-info"><div class="link-title">${esc(d.filename)}</div><div class="link-url">${window.location.origin}${d.url}</div></div><button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText('${window.location.origin}${d.url}');showToast('Link kopiert!')">📋</button></div>`;
-    }
-  }catch(e){showToast('Upload fehlgeschlagen',true)}
-}
+function renderMiniPreview(){const t=profile.theme||{};const el=document.getElementById('miniPreview');el.style.background=t.bg||'#0a0a0a';el.style.borderColor=t.cardBorder||'#27272a';const accent=t.accent||'#7c3aed';el.innerHTML=`<div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,${accent},${t.accent2||accent});margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:${t.textColor||'#fff'};overflow:hidden">${profile.avatar?'<img src="'+profile.avatar+'" style="width:100%;height:100%;object-fit:cover">':username.charAt(0).toUpperCase()}</div><div style="font-weight:700;font-size:15px;color:${t.textColor||'#fff'}">${username}</div><div style="font-size:11px;color:${t.textSecondary||'#71717a'};margin-bottom:12px">${(profile.bio||'').substring(0,40)}${(profile.bio||'').length>40?'...':''}</div>${links.slice(0,3).map(l=>`<div style="padding:8px 12px;margin-bottom:4px;border-radius:10px;border:1px solid ${t.cardBorder||'#27272a'};font-size:12px;color:${t.textColor||'#fff'};text-align:left">${l.icon||'🔗'} ${esc(l.title)}</div>`).join('')}`}
 
-function handleFileDrop(e){const file=e.dataTransfer.files[0];uploadFile(file)}
-
-function setLayout(layout,el){document.querySelectorAll('[data-layout]').forEach(e=>e.classList.remove('active'));el.classList.add('active')}
-function setEffect(effect,el){
-  document.querySelectorAll('#tabEffects .effect-card').forEach(e=>e.classList.remove('active'));
-  el.classList.add('active');
-}
-
+document.getElementById('bioInput')?.addEventListener('input',function(){document.getElementById('bioCount').textContent=this.value.length});
+document.getElementById('bgGradAngle')?.addEventListener('input',function(){document.getElementById('bgGradAngleVal').textContent=this.value+'°'});
+document.getElementById('togglePassProtect')?.addEventListener('click',function(){setTimeout(()=>{document.getElementById('passProtectRow').style.display=isOn('togglePassProtect')?'block':'none'},50)});
 async function doLogout(){await fetch('/api/logout',{method:'POST'});window.location.href='/'}
-
 init();
 </script>
 </body>
