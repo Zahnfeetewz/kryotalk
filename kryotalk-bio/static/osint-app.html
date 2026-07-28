@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSINT Hub — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0a;--surface:#111;--surface2:#1a1a2e;--border:#1e1e3a;--accent:#00ff41;--accent2:#4ade80;--text:#e2e8f0;--text2:#94a3b8;--danger:#ef4444;--warn:#fbbf24;--info:#3b82f6;--radius:12px}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;display:flex;min-height:100vh}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
+.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;flex-shrink:0;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:10}
+.sidebar-logo{padding:0 20px 20px;border-bottom:1px solid var(--border)}
+.sidebar-logo h1{font-family:'JetBrains Mono',monospace;font-size:1.1rem;color:var(--accent);font-weight:700}
+.sidebar-logo small{font-size:.7rem;color:var(--text2);display:block;margin-top:2px}
+.nav{flex:1;padding:12px 0;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;color:var(--text2);font-size:.85rem;font-weight:500;transition:all .15s;border-left:3px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,.03);color:var(--text)}
+.nav-item.active{color:var(--accent);background:rgba(0,255,65,.05);border-left-color:var(--accent)}
+.nav-item .icon{font-size:1.1rem;width:24px;text-align:center}
+.nav-item .badge{margin-left:auto;background:var(--accent);color:#000;font-size:.65rem;padding:2px 6px;border-radius:100px;font-weight:700}
+.sidebar-footer{padding:16px 20px;border-top:1px solid var(--border);font-size:.75rem;color:var(--text2)}
+.sidebar-footer a{color:var(--accent);text-decoration:none}
+.main{margin-left:240px;flex:1;padding:30px;min-height:100vh}
+.page-header{margin-bottom:30px}
+.page-header h2{font-size:1.5rem;font-weight:800}
+.page-header p{color:var(--text2);font-size:.9rem;margin-top:4px}
+.input-group{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+.input-group input,.input-group select{flex:1;min-width:200px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s}
+.input-group input:focus,.input-group select:focus{border-color:var(--accent)}
+.input-group input::placeholder{color:#475569}
+.btn{padding:12px 24px;border:none;border-radius:var(--radius);font-weight:700;font-size:.9rem;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:var(--accent);color:#000}.btn-primary:hover{box-shadow:0 0 20px rgba(0,255,65,.3)}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{border-color:var(--accent)}
+.btn-danger{background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.3)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.loading{display:inline-block;width:18px;height:18px;border:2px solid transparent;border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.results{margin-top:20px}
+.result-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:12px}
+.result-card h3{font-size:1rem;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.result-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.result-item{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:.85rem}
+.result-item .label{color:var(--text2);font-size:.75rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.result-item .value{color:var(--text);font-weight:600;word-break:break-all}
+.result-item .value.green{color:var(--accent)}
+.result-item .value.red{color:var(--danger)}
+.result-item .value.yellow{color:var(--warn)}
+.result-item .value.blue{color:var(--info)}
+.tag{display:inline-block;padding:3px 10px;border-radius:100px;font-size:.7rem;font-weight:700}
+.tag-found{background:rgba(0,255,65,.1);color:var(--accent);border:1px solid rgba(0,255,65,.2)}
+.tag-notfound{background:rgba(255,255,255,.05);color:var(--text2);border:1px solid var(--border)}
+.tag-error{background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.2)}
+.tag-warn{background:rgba(251,191,36,.1);color:var(--warn);border:1px solid rgba(251,191,36,.2)}
+.username-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.username-item{display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;font-size:.8rem;transition:all .2s}
+.username-item:hover{border-color:var(--accent);background:rgba(0,255,65,.03)}
+.username-item.found{border-color:rgba(0,255,65,.2)}
+.username-item .platform-icon{font-size:1.1rem;width:24px;text-align:center}
+.username-item .platform-name{flex:1;font-weight:600}
+.username-item .platform-status{font-size:.7rem}
+.username-item.found .platform-status{color:var(--accent)}
+.username-item.notfound .platform-status{color:#475569}
+.username-item.error .platform-status{color:var(--danger)}
+.summary-bar{display:flex;gap:20px;margin-bottom:20px;flex-wrap:wrap}
+.summary-item{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:.85rem}
+.summary-item .num{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.1rem}
+.dork-list{display:grid;gap:8px}
+.dork-category{margin-bottom:16px}
+.dork-category h4{font-size:.9rem;font-weight:700;margin-bottom:8px;color:var(--text2)}
+.dork-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;transition:all .2s}
+.dork-item:hover{border-color:var(--accent)}
+.dork-item .dork-label{font-weight:600;font-size:.85rem;flex:1}
+.dork-item .dork-desc{color:var(--text2);font-size:.75rem;flex:1}
+.dork-item .dork-query{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--accent);background:rgba(0,255,65,.05);padding:4px 8px;border-radius:4px;max-width:400px;word-break:break-all;display:none}
+.dork-item.open .dork-query{display:block;width:100%;margin-top:8px}
+.dork-item .btn-sm{padding:6px 12px;font-size:.75rem}
+.exif-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.exif-item{display:flex;justify-content:space-between;padding:8px 12px;background:rgba(255,255,255,.02);border-radius:6px;font-size:.8rem;border:1px solid var(--border)}
+.exif-item .key{color:var(--text2);font-weight:500}
+.exif-item .val{color:var(--accent);font-family:'JetBrains Mono',monospace;font-weight:600;text-align:right;word-break:break-all;max-width:60%}
+.dns-table{width:100%;border-collapse:collapse;font-size:.8rem}
+.dns-table th{text-align:left;padding:8px 12px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:1px;font-size:.7rem}
+.dns-table td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.03);font-family:'JetBrains Mono',monospace}
+.password-meter{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin:12px 0}
+.password-meter .fill{height:100%;border-radius:3px;transition:width .3s,background .3s}
+.check-row{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:.85rem}
+.check-row .check-icon{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0}
+.check-row .check-icon.pass{background:rgba(0,255,65,.15);color:var(--accent)}
+.check-row .check-icon.fail{background:rgba(239,68,68,.15);color:var(--danger)}
+.hidden{display:none!important}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text2)}
+.empty-state .icon{font-size:3rem;margin-bottom:12px}
+.empty-state p{font-size:.9rem}
+@media(max-width:768px){.sidebar{display:none}.main{margin-left:0;padding:16px}.result-grid{grid-template-columns:1fr}.username-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}}
+.map-container{width:100%;height:300px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center}
+.map-container iframe{width:100%;height:100%;border:none}
+.social-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.social-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:var(--surface);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);transition:all .2s;font-size:.75rem;text-align:center}
+.social-item:hover{border-color:var(--accent);transform:translateY(-2px)}
+.social-item .s-icon{font-size:1.5rem}
+.social-item.found{border-color:rgba(0,255,65,.3);background:rgba(0,255,65,.03)}
+.social-item.found .s-status{color:var(--accent)}
+.social-item.notfound .s-status{color:#475569}
+.tab-bar{display:flex;gap:4px;margin-bottom:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:4px;flex-wrap:wrap}
+.tab{padding:8px 16px;border-radius:8px;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--text2);transition:all .15s}
+.tab.active{background:var(--accent);color:#000}
+.tab:hover:not(.active){background:rgba(255,255,255,.05)}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <h1>[ OSINT Hub ]</h1>
+    <small>Intelligence Dashboard</small>
+  </div>
+  <div class="nav">
+    <div class="nav-item active" onclick="switchTool('username')"><span class="icon">🔍</span>Username<span class="badge">53</span></div>
+    <div class="nav-item" onclick="switchTool('email')"><span class="icon">📧</span>E-Mail</div>
+    <div class="nav-item" onclick="switchTool('ip')"><span class="icon">🌐</span>IP Lookup</div>
+    <div class="nav-item" onclick="switchTool('domain')"><span class="icon">🏛️</span>Domain</div>
+    <div class="nav-item" onclick="switchTool('phone')"><span class="icon">📱</span>Telefon</div>
+    <div class="nav-item" onclick="switchTool('password')"><span class="icon">🔐</span>Passwort</div>
+    <div class="nav-item" onclick="switchTool('exif')"><span class="icon">🗂️</span>EXIF</div>
+    <div class="nav-item" onclick="switchTool('dorks')"><span class="icon">🔗</span>Google Dorks</div>
+    <div class="nav-item" onclick="switchTool('crypto')"><span class="icon">💰</span>Crypto Wallet</div>
+    <div class="nav-item" onclick="switchTool('wifi')"><span class="icon">📶</span>WiFi / BSSID</div>
+  </div>
+  <div class="sidebar-footer">
+    <a href="/osint">← Zurück</a> · <a href="/dashboard">Dashboard</a>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- USERNAME -->
+  <div id="tool-username" class="tool-page">
+    <div class="page-header"><h2>🔍 Username OSINT</h2><p>Überprüfe einen Username auf 50+ Plattformen gleichzeitig</p></div>
+    <div class="input-group">
+      <input type="text" id="usernameInput" placeholder="Username eingeben..." onkeydown="if(event.key==='Enter')searchUsername()">
+      <button class="btn btn-primary" onclick="searchUsername()" id="usernameBtn">Suchen</button>
+    </div>
+    <div id="usernameResults"></div>
+  </div>
+
+  <!-- EMAIL -->
+  <div id="tool-email" class="tool-page hidden">
+    <div class="page-header"><h2>📧 E-Mail OSINT</h2><p>Validierung, MX-Records, Disposables, Gravatar & Reputation</p></div>
+    <div class="input-group">
+      <input type="email" id="emailInput" placeholder="E-Mail-Adresse eingeben..." onkeydown="if(event.key==='Enter')searchEmail()">
+      <button class="btn btn-primary" onclick="searchEmail()" id="emailBtn">Analysieren</button>
+    </div>
+    <div id="emailResults"></div>
+  </div>
+
+  <!-- IP -->
+  <div id="tool-ip" class="tool-page hidden">
+    <div class="page-header"><h2>🌐 IP Intelligence</h2><p>Geolocation, ISP, Reverse DNS, Proxy & Hosting-Erkennung</p></div>
+    <div class="input-group">
+      <input type="text" id="ipInput" placeholder="IP-Adresse eingeben (z.B. 8.8.8.8)..." onkeydown="if(event.key==='Enter')searchIP()">
+      <button class="btn btn-primary" onclick="searchIP()" id="ipBtn">Lookup</button>
+    </div>
+    <div id="ipResults"></div>
+  </div>
+
+  <!-- DOMAIN -->
+  <div id="tool-domain" class="tool-page hidden">
+    <div class="page-header"><h2>🏛️ Domain Recon</h2><p>DNS-Records, HTTP-Header, Technologien, SSL-Zertifikate</p></div>
+    <div class="input-group">
+      <input type="text" id="domainInput" placeholder="Domain eingeben (z.B. example.com)..." onkeydown="if(event.key==='Enter')searchDomain()">
+      <button class="btn btn-primary" onclick="searchDomain()" id="domainBtn">Analysieren</button>
+    </div>
+    <div id="domainResults"></div>
+  </div>
+
+  <!-- PHONE -->
+  <div id="tool-phone" class="tool-page hidden">
+    <div class="page-header"><h2>📱 Telefon OSINT</h2><p>Format-Validierung, Länder-Erkennung, Carrier & Nummernanalyse</p></div>
+    <div class="input-group">
+      <input type="tel" id="phoneInput" placeholder="Telefonnummer eingeben (z.B. +49 170 1234567)..." onkeydown="if(event.key==='Enter')searchPhone()">
+      <button class="btn btn-primary" onclick="searchPhone()" id="phoneBtn">Analysieren</button>
+    </div>
+    <div id="phoneResults"></div>
+  </div>
+
+  <!-- PASSWORD -->
+  <div id="tool-password" class="tool-page hidden">
+    <div class="page-header"><h2>🔐 Passwort-Check</h2><p>HIBP-Breach-Check, Entropie-Analyse & Stärkebewertung</p></div>
+    <div class="input-group">
+      <input type="password" id="passwordInput" placeholder="Passwort eingeben (wird NICHT gespeichert)..." onkeydown="if(event.key==='Enter')searchPassword()">
+      <button class="btn btn-primary" onclick="searchPassword()" id="passwordBtn">Prüfen</button>
+      <button class="btn btn-secondary" onclick="togglePassVis()" id="passVisBtn">👁️</button>
+    </div>
+    <div id="passwordResults"></div>
+  </div>
+
+  <!-- EXIF -->
+  <div id="tool-exif" class="tool-page hidden">
+    <div class="page-header"><h2>🗂️ EXIF-Metadaten</h2><p>Extrahiere versteckte Metadaten aus Bildern — GPS, Kamera, Software</p></div>
+    <div style="border:2px dashed var(--border);border-radius:var(--radius);padding:40px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:20px" id="exifDropzone" onclick="document.getElementById('exifFile').click()" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="event.preventDefault();this.style.borderColor='var(--border)';handleExifFile(event.dataTransfer.files[0])">
+      <div style="font-size:2rem;margin-bottom:8px">📁</div>
+      <p style="color:var(--text2);font-size:.9rem">Klicke oder ziehe ein Bild hierher</p>
+      <p style="color:#475569;font-size:.75rem;margin-top:4px">Unterstützt: JPG, PNG, TIFF, HEIC</p>
+    </div>
+    <input type="file" id="exifFile" accept="image/*" style="display:none" onchange="handleExifFile(this.files[0])">
+    <div id="exifResults"></div>
+  </div>
+
+  <!-- DORKS -->
+  <div id="tool-dorks" class="tool-page hidden">
+    <div class="page-header"><h2>🔗 Google Dorks</h2><p>Vorgefertigte Suchbefehle für OSINT-Recherchen</p></div>
+    <div class="input-group">
+      <input type="text" id="dorkInput" placeholder="Ziel-Domain oder Suchbegriff eingeben..." onkeydown="if(event.key==='Enter')loadDorks()">
+      <button class="btn btn-primary" onclick="loadDorks()" id="dorkBtn">Generieren</button>
+    </div>
+    <div id="dorkResults"></div>
+  </div>
+
+  <!-- CRYPTO -->
+  <div id="tool-crypto" class="tool-page hidden">
+    <div class="page-header"><h2>💰 Crypto Wallet</h2><p>Bitcoin & Ethereum Wallet-Analyse — Balance, Transaktionen</p></div>
+    <div class="input-group">
+      <input type="text" id="cryptoInput" placeholder="Wallet-Adresse eingeben (BTC/ETH)..." onkeydown="if(event.key==='Enter')searchCrypto()">
+      <button class="btn btn-primary" onclick="searchCrypto()" id="cryptoBtn">Analysieren</button>
+    </div>
+    <div id="cryptoResults"></div>
+  </div>
+
+  <!-- WIFI -->
+  <div id="tool-wifi" class="tool-page hidden">
+    <div class="page-header"><h2>📶 WiFi / BSSID OSINT</h2><p>Hersteller-Erkennung über MAC-Adresse (OUI-Lookup)</p></div>
+    <div class="input-group">
+      <input type="text" id="wifiInput" placeholder="BSSID / MAC-Adresse eingeben (z.B. AA:BB:CC:DD:EE:FF)..." onkeydown="if(event.key==='Enter')searchWifi()">
+      <button class="btn btn-primary" onclick="searchWifi()" id="wifiBtn">Lookup</button>
+    </div>
+    <div id="wifiResults"></div>
+  </div>
+
+</div>
+
+<script>
+function switchTool(name){
+  document.querySelectorAll('.tool-page').forEach(p=>p.classList.add('hidden'));
+  document.getElementById('tool-'+name).classList.remove('hidden');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>{if(n.textContent.toLowerCase().includes(name.substring(0,4)))n.classList.add('active')});
+}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function setLoading(btnId,loading){const b=document.getElementById(btnId);if(!b)return;if(loading){b.disabled=true;b.innerHTML='<span class="loading"></span> Suche...'}else{b.disabled=false;b.textContent=b.dataset.orig||b.textContent}}
+document.querySelectorAll('.btn').forEach(b=>{if(!b.dataset.orig)b.dataset.orig=b.textContent});
+
+let usernameAbort=null;
+async function searchUsername(){
+  const u=document.getElementById('usernameInput').value.trim();if(!u)return;
+  setLoading('usernameBtn',true);
+  document.getElementById('usernameResults').innerHTML='<div class="result-card"><div style="display:flex;align-items:center;gap:10px"><span class="loading"></span><span style="color:var(--text2)">Durchsuche 53 Plattformen...</span></div></div>';
+  try{const r=await fetch('/api/osint/username',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u})});
+  const d=await r.json();if(d.error)throw new Error(d.error);
+  let html=`<div class="summary-bar"><div class="summary-item"><span class="num" style="color:var(--accent)">${d.found}</span>Gefunden</div><div class="summary-item"><span class="num">${d.total-d.found}</span>Nicht gefunden</div><div class="summary-item"><span class="num">${d.total}</span>Gesamt</div></div>`;
+  html+='<div class="username-grid">';
+  d.results.forEach(r=>{
+    const cls=r.status==='found'?'found':r.status==='error'?'error':'notfound';
+    const statusText=r.status==='found'?'✓ Gefunden':r.status==='error'?'⚠ Fehler':'✗ Nicht gefunden';
+    html+=`<a href="${esc(r.url)}" target="_blank" rel="noopener" class="username-item ${cls}" style="text-decoration:none"><span class="platform-icon">${r.icon}</span><span class="platform-name">${esc(r.platform)}</span><span class="platform-status">${statusText}</span></a>`;
+  });
+  html+='</div>';
+  document.getElementById('usernameResults').html=html;document.getElementById('usernameResults').innerHTML=html;
+  }catch(e){document.getElementById('usernameResults').innerHTML=`<div class="result-card" style="border-color:var(--danger)"><p style="color:var(--danger)">❌ ${esc(e.message)}</p></div>`}
+  setLoading('usernameBtn',false);
+}
+
+async function searchEmail(){
+  const e=document.getElementById('emailInput').value.trim();if(!e)return;
+  setLoading('emailBtn',true);
+  document.getElementById('emailResults').innerHTML='<div class="result-card"><div style="display:flex;align-items:center;gap:10px"><span class="loading"></span><span style="color:var(--text2)">Analysiere E-Mail...</span></div></div>';
+  try{const r=await fetch('/api/osint/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e})});
+  const d=await r.json();if(d.error)throw new Error(d.error);
+  let html=`<div class="result-card"><h3>📋 E-Mail Info</h3><div class="result-grid">
+    <div class="result-item"><div class="label">E-Mail</div><div class="value">${esc(d.email)}</div></div>
+    <div class="result-item"><div class="label">Domain</div><div class="value">${esc(d.domain)}</div></div>
+    <div class="result-item"><div class="label">Provider</div><div class="value blue">${esc(d.provider)}</div></div>
+    <div class="result-item"><div class="label">Lokal-Teil</div><div class="value">${esc(d.local)}</div></div>
+    <div class="result-item"><div class="label">MX Records</div><div class="value ${d.mxValid?'green':'red'}">${d.mxValid?'✓ Gültig ('+d.mxRecords.length+')':'✗ Keine MX Records'}</div></div>
+    <div class="result-item"><div class="label">Disposable</div><div class="value ${d.disposable?'red':'green'}">${d.disposable?'⚠ Ja — Temporäre E-Mail':'✓ Keine Disposal-Adresse'}</div></div>
+    <div class="result-item"><div class="label">Gravatar</div><div class="value ${d.hasGravatar?'green':'yellow'}">${d.hasGravatar?'✓ Profil gefunden':'✗ Kein Gravatar'}</div></div>
+  </div></div>`;
+  if(d.mxRecords&&d.mxRecords.length){
+    html+=`<div class="result-card"><h3>📬 MX Records</h3><table class="dns-table"><tr><th>Priorität</th><th>Server</th></tr>`;
+    d.mxRecords.forEach(m=>{html+=`<tr><td>${m.priority}</td><td style="color:var(--accent)">${esc(m.exchange)}</td></tr>`});
+    html+='</table></div>';
+  }
+  if(d.reputation){
+    html+=`<div class="result-card"><h3>⭐ E-Mail Reputation</h3><div class="result-grid">
+      <div class="result-item"><div class="label">Score</div><div class="value ${d.reputation.score>0.7?'green':d.reputation.score>0.3?'yellow':'red'}">${Math.round(d.reputation.score*100)}%</div></div>
+      <div class="result-item"><div class="label">Zusammenfassung</div><div class="value">${esc(d.reputation.summary||'Unbekannt')}</div></div>
+    </div></div>`;
+  }
+  if(d.flags&&d.flags.length){html+=`<div class="result-card" style="border-color:rgba(239,68,68,.3)"><h3>⚠️ Warnungen</h3>`;d.flags.forEach(f=>{html+=`<p style="color:var(--warn);font-size:.85rem;margin-bottom:4px">⚠ ${esc(f)}</p>`});html+='</div>'}
+  if(d.gravatarHash){html+=`<div class="result-card"><h3>🖼️ Gravatar</h3><div style="display:flex;align-items:center;gap:16px"><img src="https://www.gravatar.com/avatar/${d.gravatarHash}?d=mp&s=80" style="width:60px;height:60px;border-radius:50%;border:2px solid var(--border)"><div><div style="font-size:.85rem;color:var(--text2)">Hash: <code style="color:var(--accent)">${d.gravatarHash}</code></div><div style="font-size:.8rem;color:#475569;margin-top:4px">${d.hasGravatar?'Profil gefunden':'Kein Profil hinterlegt'}</div></div></div></div>`}
+  document.getElementById('emailResults').innerHTML=html;
+  }catch(e){document.getElementById('emailResults').innerHTML=`<div class="result-card" style="border-color:var(--danger)"><p style="color:var(--danger)">❌ ${esc(e.message)}</p></div>`}
+  setLoading('emailBtn',false);
+}
+
+async function searchIP(){
+  const ip=document.getElementById('ipInput').value.trim();if(!ip)return;
+  setLoading('ipBtn',true);
+  document.getElementById('ipResults').innerHTML='<div class="result-card"><div style="display:flex;align-items:center;gap:10px"><span class="loading"></span><span style="color:var(--text2)">Lookup läuft...</span></div></div>';
+  try{const r=await fetch('/api/osint/ip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ip})});
+  const d=await r.json();if(d.error)throw new Error(d.error);
+  let html=`<div class="result-card"><h3>🌐 IP Information — ${esc(d.ip)}</h3><div class="result-grid">
+    <div class="result-item"><div class="label">Land</div><div class="value">${d.flag||''} ${esc(d.country||d.countryISO||'')}</div></div>
+    <div class="result-item"><div class="label">Region</div><div class="value">${esc(d.region||'')}</div></div>
+    <div class="result-item"><div class="label">Stadt</div><div class="value">${esc(d.city||'')}</div></div>
+    <div class="result-item"><div class="label">PLZ</div><div class="value">${esc(d.zip||'')}</div></div>
+    <div class="result-item"><div class="label">Breitengrad</div><div class="value blue">${d.lat||''}</div></div>
+    <div class="result-item"><div class="label">Längengrad</div><div class="value blue">${d.lon||''}</div></div>
+    <div class="result-item"><div class="label">Zeitzone</div><div class="value">${esc(d.timezone||'')}</div></div>
+    <div class="result-item"><div class="label">ISP</div><div class="value blue">${esc(d.isp||'')}</div></div>
+    <div class="result-item"><div class="label">Organisation</div><div class="value">${esc(d.org||'')}</div></div>
+    <div class="result-item"><div class="label">AS</div><div class="value">${esc(d.as||'')}</div></div>
+    <div class="result-item"><div class="label">Reverse DNS</div><div class="value">${esc(d.reverse||'N/A')}</div></div>
+    <div class="result-item"><div class="label">Mobil</div><div class="value ${d.mobile?'yellow':'green'}">${d.mobile?'⚠ Ja':'✓ Nein'}</div></div>
+    <div class="result-item"><div class="label">Proxy/VPN</div><div class="value ${d.proxy?'red':'green'}">${d.proxy?'⚠ Ja — VPN/Proxy erkannt':'✓ Kein Proxy'}</div></div>
+    <div class="result-item"><div class="label">Hosting</div><div class="value ${d.hosting?'yellow':'green'}">${d.hosting?'⚠ Ja — Server/Hosting':'✓ Nein'}</div></div>
+  </div></div>`;
+  if(d.lat&&d.lon){html+=`<div class="result-card"><h3>📍 Standort</h3><div class="map-container"><iframe src="https://www.openstreetmap.org/export/embed.html?bbox=${d.lon-0.01},${d.lat-0.01},${d.lon+0.01},${d.lat+0.01}&layer=mapnik&marker=${d.lat},${d.lon}" loading="lazy"></iframe></div></div>`}
+  document.getElementById('ipResults').innerHTML=html;
+  }catch(e){document.getElementById('ipResults').innerHTML=`<div class="result-card" style="border-color:var(--danger)"><p style="color:var(--danger)">❌ ${esc(e.message)}</p></div>`}
+  setLoading('ipBtn',false);
+}
+
+async function searchDomain(){
+  const d=document.getElementById('domainInput').value.trim();if(!d)return;
+  setLoading('domainBtn',true);
+  document.getElementById('domainResults').innerHTML='<div class="result-card"><div style="display:flex;align-items:center;gap:10px"><span class="loading"></span><span style="color:var(--text2)">Analysiere Domain...</span></div></div>';
+  try{const r=await fetch('/api/osint/domain',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({domain:d})});
+  const data=await r.json();if(data.error)throw new Error(data.error);
+  let html=`<div class="result-card"><h3>🏛️ Domain — ${esc(data.domain)}</h3><div class="result-grid">
+    <div class="result-item"><div class="label">HTTP Status</div><div class="value ${data.statusCode<400?'green':'red'}">${data.statusCode||'N/A'}</div></div>
+    <div class="result-item"><div class="label">Server</div><div class="value">${esc(data.headers?.server||'Unbekannt')}</div></div>
+    <div class="result-item"><div class="label">Powered By</div><div class="value">${esc(data.headers?.poweredBy||'N/A')}</div></div>
+    <div class="result-item"><div class="label">HSTS</div><div class="value ${data.headers?.strictTransport?'green':'yellow'}">${data.headers?.strictTransport?'✓ Aktiv':'✗ Nicht aktiv'}</div></div>
+    <div class="result-item"><div class="label">CSP</div><div class="value ${data.headers?.contentSecurity?'green':'yellow'}">${data.headers?.contentSecurity?'✓ Aktiv':'✗ Nicht aktiv'}</div></div>
+    <div class="result-item"><div class="label">X-Frame</div><div class="value">${esc(data.headers?.xFrame||'N/A')}</div></div>
+  </div></div>`;
+  if(data.technologies&&data.technologies.length){html+=`<div class="result-card"><h3>⚙️ Technologien</h3><div style="display:flex;flex-wrap:wrap;gap:6px">`;data.technologies.forEach(t=>{html+=`<span class="tag tag-found">${esc(t)}</span>`});html+='</div></div>'}
+  if(data.ssl){html+=`<div class="result-card"><h3>🔒 SSL-Zertifikat</h3><div class="result-grid">
+    <div class="result-item"><div class="label">Subject</div><div class="value">${esc(data.ssl.subject)}</div></div>
+    <div class="result-item"><div class="label">Issuer</div><div class="value blue">${esc(data.ssl.issuer)}</div></div>
+    <div class="result-item"><div class="label">Gültig von</div><div class="value">${esc(data.ssl.validFrom)}</div></div>
+    <div class="result-item"><div class="label">Gültig bis</div><div class="value">${esc(data.ssl.validTo)}</div></div>
+  </div></div>`}
+  if(data.dns){
+    const dnsOrder=['A','AAAA','MX','NS','TXT','CNAME'];
+    for(const t of dnsOrder){if(data.dns[t]){
+      html+=`<div class="result-card"><h3>🔗 DNS — ${t} Records</h3><table class="dns-table"><tr><th>Typ</th><th>Wert</th></tr>`;
+      const records=Array.isArray(data.dns[t])?data.dns[t]:[data.dns[t]];
+      records.forEach(r=>{
+        if(typeof r==='object'&&r.exchange){html+=`<tr><td>${t}</td><td style="color:var(--accent)">${esc(r.exchange)} (Prio: ${r.priority})</td></tr>`}
+        else if(typeof r==='object'&&r.nsname){html+=`<tr><td>${t}</td><td style="color:var(--accent)">${esc(r.nsname)} ${r.hostmaster?' — '+esc(r.hostmaster):''}</td></tr>`}
+        else if(typeof r==='string'){html+=`<tr><td>${t}</td><td style="color:var(--accent)">${esc(r)}</td></tr>`}
+        else if(typeof r==='object'&&r.name){html+=`<tr><td>${t}</td><td style="color:var(--accent)">${esc(Array.isArray(r)?r.join(' '):JSON.stringify(r))}</td></tr>`}
+      });
+      html+='</table></div>';
+    }}
+  }
+  document.getElementById('domainResults').innerHTML=html;
+  }catch(e){document.getElementById('domainResults').innerHTML=`<div class="result-card" style="border-color:var(--danger)"><p style="color:var(--danger)">❌ ${esc(e.message)}</p></div>`}
+  setLoading('domainBtn',false);
+}
+
+async function searchPhone(){
+  const p=document.getElementById('phoneInput').value.trim();if(!p)return;
+  setLoading('phoneBtn',true);
+  document.getElementById('phoneResults').innerHTML='<div class="result-card"><div style="display:flex;align-items:center;gap:10px"><span class="loading"></span><span style="color:var(--text2)">Analysiere Nummer...</span></div></div>';
+  try{const r=await fetch('/api/osint/phone',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p})});
+  const d=await r.json();if(d.error)throw new Error(d.error);
+  let html=`<div class="result-card"><h3>${d.flag||'📱'} Telefon-Analyse</h3><div class="result-grid">
+    <div class="result-item"><div class="label">Original</div><div class="value">${esc(d.raw)}</div></div>
+    <div class="result-item"><div class="label">E.164 Format</div><div class="value green">${esc(d.e164)}</div></div>
+    <div class="result-item"><div class="label">Land</div><div class="value">${d.flag||''} ${esc(d.country)}</div></div>
+    <div class="result-item"><div class="label">Gültig</div><div class="value ${d.valid?'green':'red'}">${d.valid?'✓ Gültig':'✗ Ungültig'}</div></div>
+    <div class="result-item"><div class="label">Netztyp</div><div class="value">${esc(d.lineType)}</div></div>
+    <div class="result-item"><div class="label">Carrier</div><div class="value blue">${esc(d.carrier)}</div></div>
+  </div></div>`;
+  document.getElementById('phoneResults').innerHTML=html;
+  }catch(e){document.getElementById('phoneResults').innerHTML=`<div class="result-card" style="border-color:var(--danger)"><p style="color:var(--danger)">❌ ${esc(e.message)}</p></div>`}
+  setLoading('phoneBtn',false);
+}
+
+let passVisible=false;
+function togglePassVis(){
+  passVisible=!passVisible;
+  const inp=document.getElementById('passwordInput');
+  inp.type=passVisible?'text':'password';
+}
+async function searchPassword(){
+  const p=document.getElementById('passwordInput').value;if(!p)return;
+  setLoading('passwordBtn',true);
+  document.getElementById('passwordResults').innerHTML='<div class="result-card"><div style="display:flex;align-items:center;gap:10px"><span class="loading"></span><span style="color:var(--text2)">Prüfe Passwort...</span></div></div>';
+  try{const r=await fetch('/api/osint/password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:p})});
+  const d=await r.json();if(d.error)throw new Error(d.error);
+  const scoreColors=['#ef4444','#ef4444','#f97316','#fbbf24','#a3e635','#22c55e','#00ff41'];
+  const meterColor=scoreColors[d.score]||scoreColors[0];
+  const meterWidth=(d.score/7)*100;
+  let html=`<div class="result-card"><h3>🔐 Passwort-Analyse</h3>
+    <div class="password-meter"><div class="fill" style="width:${meterWidth}%;background:${meterColor}"></div></div>
+    <div class="result-grid">
+      <div class="result-item"><div class="label">Stärke</div><div class="value" style="color:${meterColor}">${esc(d.strength)}</div></div>
+      <div class="result-item"><div class="label">Score</div><div class="value">${d.score}/7</div></div>
+      <div class="result-item"><div class="label">Entropie</div><div class="value blue">${d.entropy} Bits</div></div>
+      <div class="result-item"><div class="label">Geschätzte Knackzeit</div><div class="value">${esc(d.timeToCrack)}</div></div>
+      <div class="result-item"><div class="label">Data Breaches</div><div class="value ${d.breached?'red':'green'}">${d.breached?'⚠ '+d.breachCount+'x gefunden':'✓ Kein Leak gefunden'}</div></div>
+    </div></div>`;
+  html+='<div class="result-card"><h3>✅ Checks</h3>';
+  const checkLabels={length:'Mindestens 8 Zeichen',uppercase:'Großbuchstaben',lowercase:'Kleinbuchstaben',numbers:'Zahlen',symbols:'Sonderzeichen',long:'Mindestens 12 Zeichen',veryLong:'Mindestens 16 Zeichen'};
+  for(const[k,v] of Object.entries(d.checks)){
+    html+=`<div class="check-row"><div class="check-icon ${v?'pass':'fail'}">${v?'✓':'✗'}</div><span>${checkLabels[k]||k}</span></div>`;
+  }
+  html+='</div>';
+  document.getElementById('passwordResults').innerHTML=html;
+  }catch(e){document.getElementById('passwordResults').innerHTML=`<div class="result-card" style="border-color:var(--danger)"><p style="color:var(--danger)">❌ ${esc(e.message)}</p></div>`}
+  setLoading('passwordBtn',false);
+}
+
+async function handleExifFile(file){
+  if(!file)return;
+  document.getElementById('exifResults').innerHTML='<div class="result-card"><div style="display:flex;align-items:center;gap:10px"><span class="loading"></span><span style="color:var(--text2)">Extrahiere Metadaten...</span></div></div>';
+  const fd=new FormData();fd.append('image',file);
+  try{const r=await fetch('/api/osint/exif',{method:'POST',body:fd});
+  const d=await r.json();if(d.error)throw new Error(d.error);
+  let html=`<div class="result-card"><h3>📁 Datei-Info</h3><div class="result-grid">
+    <div class="result-item"><div class="label">Dateiname</div><div class="value">${esc(d.filename)}</div></div>
+    <div class="result-item"><div class="label">Größe</div><div class="value">${(d.size/1024).toFixed(1)} KB</div></div>
+    <div class="result-item"><div class="label">EXIF Daten</div><div class="value ${d.hasExif?'green':'yellow'}">${d.hasExif?'✓ Gefunden':'✗ Keine EXIF-Daten'}</div></div>
+  </div></div>`;
+  if(d.exif&&Object.keys(d.exif).length){
+    const labelNames={CameraMake:'Kamera-Hersteller',CameraModel:'Kamera-Modell',Software:'Software',DateTime:'Datum',DateTimeOriginal:'Aufnahme-Datum',FocalLength:'Brennweite',ISO:'ISO',ExposureTime:'Belichtungszeit',FNumber:'Blende',PixelXDimension:'Breite',PixelYDimension:'Höhe',BodySerialNumber:'Seriennummer',LensModel:'Objektiv',GPS:'GPS-Koordinaten',Orientation:'Ausrichtung',FocalLengthIn35mmFilm:'Brennweite (35mm)'};
+    html+=`<div class="result-card"><h3>🏷️ Metadaten</h3><div class="exif-grid">`;
+    for(const[k,v] of Object.entries(d.exif)){
+      if(k==='GPS'&&typeof v==='object'){
+        for(const[gk,gv] of Object.entries(v)){html+=`<div class="exif-item"><span class="key">${esc(gk)}</span><span class="val">${esc(String(gv))}</span></div>`}
+      }else{
+        html+=`<div class="exif-item"><span class="key">${esc(labelNames[k]||k)}</span><span class="val">${esc(String(v))}</span></div>`;
+      }
+    }
+    html+='</div></div>';
+    if(d.exif.GPS){
+      const latMatch=typeof d.exif.GPS.GPSLatitude==='string'?d.exif.GPS.GPSLatitude.match(/(\d+)\/1?\s+(\d+)\/1?\s+(\d+)\/1/):null;
+      const lonMatch=typeof d.exif.GPS.GPSLongitude==='string'?d.exif.GPS.GPSLongitude.match(/(\d+)\/1?\s+(\d+)\/1?\s+(\d+)\/1/):null;
+    }
+  }
+  document.getElementById('exifResults').innerHTML=html;
+  }catch(e){document.getElementById('exifResults').innerHTML=`<div class="result-card" style="border-color:var(--danger)"><p style="color:var(--danger)">❌ ${esc(e.message)}</p></div>`}
+}
+
+async function loadDorks(){
+  const t=document.getElementById('dorkInput').value.trim()||'example';
+  setLoading('dorkBtn',true);
+  try{const r=await fetch('/api/osint/dorks?target='+encodeURIComponent(t));
+  const d=await r.json();
+  let html='';
+  d.dorks.forEach(cat=>{
+    html+=`<div class="dork-category"><h4>${cat.icon} ${esc(cat.category)}</h4><div class="dork-list">`;
+    cat.queries.forEach(q=>{
+      html+=`<div class="dork-item" onclick="this.classList.toggle('open')">
+        <div><div class="dork-label">${esc(q.label)}</div><div class="dork-desc">${esc(q.desc)}</div>
+        <div class="dork-query">${esc(q.dork)}</div></div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();navigator.clipboard.writeText('${esc(q.dork).replace(/'/g,"\\'")}')">📋</button>
+          <a href="https://www.google.com/search?q=${encodeURIComponent(q.dork)}" target="_blank" class="btn btn-primary btn-sm" onclick="event.stopPropagation()" style="text-decoration:none">🔍 Google</a>
+        </div>
+      </div>`;
+    });
+    html+='</div></div>';
+  });
+  document.getElementById('dorkResults').innerHTML=html;
+  }catch(e){document.getElementById('dorkResults').innerHTML=`<div class="result-card" style="border-color:var(--danger)"><p style="color:var(--danger)">❌ ${esc(e.message)}</p></div>`}
+  setLoading('dorkBtn',false);
+}
+
+async function searchCrypto(){
+  const a=document.getElementById('cryptoInput').value.trim();if(!a)return;
+  setLoading('cryptoBtn',true);
+  document.getElementById('cryptoResults').innerHTML='<div class="result-card"><div style="display:flex;align-items:center;gap:10px"><span class="loading"></span><span style="color:var(--text2)">Analysiere Wallet...</span></div></div>';
+  try{const r=await fetch('/api/osint/cryptocurrency',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:a})});
+  const d=await r.json();if(d.error)throw new Error(d.error);
+  let html=`<div class="result-card"><h3>💰 ${esc(d.chain)} Wallet</h3><div class="result-grid">
+    <div class="result-item"><div class="label">Adresse</div><div class="value" style="word-break:break-all">${esc(d.address)}</div></div>
+    <div class="result-item"><div class="label">Chain</div><div class="value blue">${esc(d.chain)}</div></div>
+    <div class="result-item"><div class="label">Balance</div><div class="value green">${d.balance} ${d.chain==='Bitcoin'?'BTC':d.chain==='Ethereum'?'ETH':''}</div></div>
+    <div class="result-item"><div class="label">Transaktionen</div><div class="value">${d.txCount}</div></div>
+    ${d.received?`<div class="result-item"><div class="label">Empfangen</div><div class="value green">${d.received}</div></div>`:''}
+  </div></div>`;
+  if(d.chain==='Bitcoin'){html+=`<div class="result-card"><h3>🔗 Links</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><a href="https://blockchain.com/btc/address/${d.address}" target="_blank" class="btn btn-secondary" style="text-decoration:none">blockchain.com</a><a href="https://blockchair.com/bitcoin/address/${d.address}" target="_blank" class="btn btn-secondary" style="text-decoration:none">blockchair.com</a></div></div>`}
+  else if(d.chain==='Ethereum'){html+=`<div class="result-card"><h3>🔗 Links</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><a href="https://etherscan.io/address/${d.address}" target="_blank" class="btn btn-secondary" style="text-decoration:none">etherscan.io</a><a href="https://blockchair.com/ethereum/address/${d.address}" target="_blank" class="btn btn-secondary" style="text-decoration:none">blockchair.com</a></div></div>`}
+  document.getElementById('cryptoResults').innerHTML=html;
+  }catch(e){document.getElementById('cryptoResults').innerHTML=`<div class="result-card" style="border-color:var(--danger)"><p style="color:var(--danger)">❌ ${esc(e.message)}</p></div>`}
+  setLoading('cryptoBtn',false);
+}
+
+async function searchWifi(){
+  const b=document.getElementById('wifiInput').value.trim();if(!b)return;
+  setLoading('wifiBtn',true);
+  document.getElementById('wifiResults').innerHTML='<div class="result-card"><div style="display:flex;align-items:center;gap:10px"><span class="loading"></span><span style="color:var(--text2)">Lookup läuft...</span></div></div>';
+  try{const r=await fetch('/api/osint/wifi?bssid='+encodeURIComponent(b));
+  const d=await r.json();if(d.error)throw new Error(d.error);
+  let html=`<div class="result-card"><h3>📶 WiFi / BSSID Info</h3><div class="result-grid">
+    <div class="result-item"><div class="label">BSSID</div><div class="value">${esc(d.formatted||d.bssid)}</div></div>
+    <div class="result-item"><div class="label">OUI</div><div class="value blue">${esc(d.oui)}</div></div>
+    <div class="result-item"><div class="label">Hersteller</div><div class="value green">${esc(d.vendor)}</div></div>
+  </div></div>`;
+  document.getElementById('wifiResults').innerHTML=html;
+  }catch(e){document.getElementById('wifiResults').innerHTML=`<div class="result-card" style="border-color:var(--danger)"><p style="color:var(--danger)">❌ ${esc(e.message)}</p></div>`}
+  setLoading('wifiBtn',false);
+}
+</script>
+</body>
+</html>

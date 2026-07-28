@@ -404,6 +404,7 @@ async function init(){
   if(profile.visibility==='hidden')document.getElementById('toggleVisibility').classList.remove('on');
   if(profile.passwordProtect){document.getElementById('togglePassProtect').classList.add('on');document.getElementById('passProtectRow').style.display='block';document.getElementById('profilePassword').value=profile.profilePassword||''}
   if(profile.background){showBgPreview(profile.background)}
+  if(profile.bgType){setBgType(profile.bgType,document.querySelector('[data-bt="'+profile.bgType+'"]'));if(profile.bgType==='color'&&profile.bgValue)document.getElementById('bgColor').value=profile.bgValue;if(profile.bgType==='gradient'&&profile.bgValue){const m=profile.bgValue.match(/#[0-9a-fA-F]{3,8}/g);if(m&&m.length>=2){document.getElementById('bgGrad1').value=m[0];document.getElementById('bgGrad2').value=m[1]}}}
   renderThemeGrid();renderEffectGrid();renderLinks();renderSocials();renderMiniPreview();
   }catch(e){window.location.href='/'}
 }
@@ -419,7 +420,7 @@ function setEffect(id,el){document.querySelectorAll('#effectGrid .effect-card').
 function setLayout(l,el){document.querySelectorAll('[data-layout]').forEach(e=>e.classList.remove('active'));el.classList.add('active')}
 function setLinkStyle(s,el){document.querySelectorAll('[data-ls]').forEach(e=>e.classList.remove('active'));el.classList.add('active')}
 function setBgType(t,el){document.querySelectorAll('[data-bt]').forEach(e=>e.classList.remove('active'));el.classList.add('active');document.getElementById('bgColorPicker').style.display=t==='color'?'flex':'none';document.getElementById('bgGradientPicker').style.display=t==='gradient'?'block':'none';document.getElementById('bgImagePicker').style.display=t==='image'?'block':'none'}
-function removeBg(){profile.background='';document.getElementById('bgPreview').style.display='none';saveProfile()}
+function removeBg(){profile.background='';profile.bgType='color';profile.bgValue='';fetch('/api/profile',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({bgType:'color',bgValue:'',background:''})});document.getElementById('bgPreview').style.display='none';document.getElementById('bgPreviewVid').src='';document.getElementById('bgPreviewImg').src='';setBgType('color',document.querySelector('[data-bt="color"]'));showToast('Hintergrund entfernt')}
 
 function renderLinks(){const el=document.getElementById('linksList');if(!links.length){el.innerHTML='<div class="empty-state"><div class="icon">🔗</div><p>Noch keine Links. Klicke "+ Link hinzufügen".</p></div>';return}el.innerHTML=links.map((l,i)=>`<div class="link-item" draggable="true" data-idx="${i}" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event)"><span style="color:var(--text3);font-size:14px;cursor:grab">⠿</span><div class="link-icon">${l.icon||'🔗'}</div><div class="link-info"><div class="link-title">${esc(l.title)}</div><div class="link-url">${esc(l.url)}</div></div><div class="link-meta"><div class="link-clicks">${l.clicks||0} Klicks</div><div class="link-actions"><button class="btn btn-ghost btn-sm" onclick="editLink('${l.id}')">✏️</button><button class="btn btn-ghost btn-sm" onclick="deleteLink('${l.id}')">🗑️</button></div></div></div>`).join('')}
 
@@ -446,19 +447,75 @@ const musicUrl=document.getElementById('musicUrl').value;const musicAutoplay=isO
 const customCSS=document.getElementById('customCSS').value;
 const visibility=isOn('toggleVisibility')?'public':'hidden';
 const passwordProtect=isOn('togglePassProtect');const profilePassword=document.getElementById('profilePassword').value;
-try{await fetch('/api/profile',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({theme,layout,effects,avatarEffects,bio,seo,bioAnimation,musicUrl,musicAutoplay,customCSS,visibility,passwordProtect,profilePassword})});showToast('Gespeichert!');renderMiniPreview()}catch(e){showToast('Fehler',true)}}
+const bgType=document.querySelector('[data-bt].active')?.dataset.bt||'color';
+const bgValue=bgType==='color'?document.getElementById('bgColor').value:bgType==='gradient'?`linear-gradient(${document.getElementById('bgGradAngle').value}deg,${document.getElementById('bgGrad1').value},${document.getElementById('bgGrad2').value})`:profile.background||'';
+try{await fetch('/api/profile',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({theme,layout,effects,avatarEffects,bio,seo,bioAnimation,musicUrl,musicAutoplay,customCSS,visibility,passwordProtect,profilePassword,bgType,bgValue})});profile.bgType=bgType;profile.bgValue=bgValue;showToast('Gespeichert!');renderMiniPreview()}catch(e){showToast('Fehler',true)}}
 
 async function uploadAvatar(input){const file=input.files[0];if(!file)return;const fd=new FormData();fd.append('avatar',file);try{const r=await fetch('/api/avatar',{method:'POST',body:fd});const d=await r.json();if(d.ok){profile.avatar=d.avatar;['dashAvatar','avatarTabPreview','sideAvatar'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<img src="'+d.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'});showToast('Avatar aktualisiert!')}}catch(e){showToast('Upload fehlgeschlagen',true)}}
 
-async function uploadBg(file){if(!file)return;const fd=new FormData();fd.append('background',file);try{const r=await fetch('/api/background',{method:'POST',body:fd});const d=await r.json();if(d.ok){profile.background=d.background;showBgPreview(d.background);showToast('Hintergrund aktualisiert!')}}catch(e){showToast('Upload fehlgeschlagen',true)}}
-function setBgUrl(){const url=document.getElementById('bgUrl').value.trim();if(url){profile.background=url;fetch('/api/profile',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({background:url})});showBgPreview(url);showToast('URL gesetzt!')}}
+async function uploadBg(file){if(!file)return;const fd=new FormData();fd.append('background',file);try{const r=await fetch('/api/background',{method:'POST',body:fd});const d=await r.json();if(d.ok){profile.background=d.background;profile.bgType='image';profile.bgValue=d.background;fetch('/api/profile',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({bgType:'image',bgValue:d.background,background:d.background})});showBgPreview(d.background);showToast('Hintergrund aktualisiert!')}}catch(e){showToast('Upload fehlgeschlagen',true)}}
+function setBgUrl(){const url=document.getElementById('bgUrl').value.trim();if(url){profile.background=url;profile.bgType='image';profile.bgValue=url;fetch('/api/profile',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({bgType:'image',bgValue:url,background:url})});showBgPreview(url);showToast('URL gesetzt!')}}
 function showBgPreview(src){const isV=/\.(mp4|webm|ogg|mov)(\?|$)/i.test(src);const preview=document.getElementById('bgPreview');const img=document.getElementById('bgPreviewImg');const vid=document.getElementById('bgPreviewVid');preview.style.display='block';if(isV){img.style.display='none';vid.style.display='block';vid.src=src;vid.play().catch(()=>{})}else{vid.style.display='none';img.style.display='block';img.src=src}}
 
 async function uploadFile(file){if(!file)return;const fd=new FormData();fd.append('file',file);try{const r=await fetch('/api/upload',{method:'POST',body:fd});const d=await r.json();if(d.ok){showToast('Datei hochgeladen!');const list=document.getElementById('filesList');list.style.display='block';document.getElementById('filesContent').innerHTML+=`<div class="link-item"><div class="link-icon">📄</div><div class="link-info"><div class="link-title">${esc(d.filename)}</div><div class="link-url">${window.location.origin}${d.url}</div></div><button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText('${window.location.origin}${d.url}');showToast('Link kopiert!')">📋</button></div>`}}catch(e){showToast('Upload fehlgeschlagen',true)}}
 
-function renderMiniPreview(){const t=profile.theme||{};const el=document.getElementById('miniPreview');el.style.background=t.bg||'#0a0a0a';el.style.borderColor=t.cardBorder||'#27272a';const accent=t.accent||'#7c3aed';el.innerHTML=`<div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,${accent},${t.accent2||accent});margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:${t.textColor||'#fff'};overflow:hidden">${profile.avatar?'<img src="'+profile.avatar+'" style="width:100%;height:100%;object-fit:cover">':username.charAt(0).toUpperCase()}</div><div style="font-weight:700;font-size:15px;color:${t.textColor||'#fff'}">${username}</div><div style="font-size:11px;color:${t.textSecondary||'#71717a'};margin-bottom:12px">${(profile.bio||'').substring(0,40)}${(profile.bio||'').length>40?'...':''}</div>${links.slice(0,3).map(l=>`<div style="padding:8px 12px;margin-bottom:4px;border-radius:10px;border:1px solid ${t.cardBorder||'#27272a'};font-size:12px;color:${t.textColor||'#fff'};text-align:left">${l.icon||'🔗'} ${esc(l.title)}</div>`).join('')}`}
+function renderMiniPreview(){
+const t=profile.theme||{};
+const av=profile.avatarEffects||{};
+const accent=t.accent||'#7c3aed';
+const accent2=t.accent2||'#a78bfa';
+const cardBorder=t.cardBorder||'#27272a';
+const textColor=t.textColor||'#fff';
+const textSec=t.textSecondary||'#71717a';
+const el=document.getElementById('miniPreview');
+
+el.style.cssText='position:relative;overflow:hidden;border:1px solid '+cardBorder+';border-radius:16px;padding:20px;text-align:center;min-height:300px';
+
+let bgHtml='';
+const isV=profile.background&&/\.(mp4|webm|ogg|mov)(\?|$)/i.test(profile.background);
+if(profile.bgType==='image'&&profile.background){
+  if(isV)bgHtml='<video src="'+profile.background+'" autoplay loop muted playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></video><div style="position:absolute;inset:0;background:rgba(0,0,0,.5)"></div>';
+  else bgHtml='<div style="position:absolute;inset:0;background:url('+profile.background+') center/cover no-repeat"></div><div style="position:absolute;inset:0;background:rgba(0,0,0,.5)"></div>';
+}else if(profile.bgType==='gradient'&&profile.bgValue){
+  bgHtml='<div style="position:absolute;inset:0;background:'+profile.bgValue+'"></div>';
+}else{
+  bgHtml='<div style="position:absolute;inset:0;background:'+(t.bg||'#0a0a0a')+'"></div>';
+}
+
+const linkStyle=profile.theme?.linkStyle||'glass';
+const lsBg=linkStyle==='solid'?(accent+'1a'):linkStyle==='outline'?'transparent':linkStyle==='gradient'?'linear-gradient(135deg,'+accent+'1a,'+accent2+'0d)':'rgba(255,255,255,.04)';
+const lsBorder=linkStyle==='outline'?'2px solid '+accent+'44':'1px solid '+cardBorder;
+
+let avatarCss='border-radius:50%;width:60px;height:60px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:'+textColor+';overflow:hidden;background:linear-gradient(135deg,'+accent+','+accent2+'88)';
+if(av.glow!==false)avatarCss+=';box-shadow:0 0 20px '+accent+'44';
+if(av.border!==false)avatarCss+=';border:2px solid '+accent+'66';
+
+const verified=profile.verified?'<span style="display:inline-block;font-size:9px;padding:1px 6px;border-radius:100px;background:rgba(124,58,237,.15);color:#a78bfa;font-weight:600;margin-left:4px;vertical-align:middle">&#10003;</span>':'';
+const bioText=(profile.bio||'').substring(0,60);
+
+const enabledLinks=(links||[]).filter(l=>l.enabled!==false).slice(0,5);
+let linksHtml=enabledLinks.map(l=>'<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;margin-bottom:5px;border-radius:10px;background:'+lsBg+';border:'+lsBorder+';font-size:11px;color:'+textColor+';text-align:left"><span style="font-size:14px;flex-shrink:0">'+(l.icon||'&#128279;')+'</span><span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(l.title)+'</span><span style="color:'+textSec+';font-size:10px">&#8594;</span></div>').join('');
+
+const socialIcons={instagram:'&#128247;',twitter:'&#128038;',tiktok:'&#127925;',youtube:'&#127909;',discord:'&#128172;',twitch:'&#127918;',spotify:'&#127911;',linkedin:'&#128188;',snapchat:'&#128123;',reddit:'&#128308;',pinterest:'&#128204;',facebook:'&#128100;',soundcloud:'&#128264;',github:'&#128025;',telegram:'&#9992;&#65039;',email:'&#128231;',website:'&#127760;'};
+let socialsHtml='';
+if(profile.socials&&profile.socials.length){
+  socialsHtml='<div style="display:flex;gap:6px;justify-content:center;margin-bottom:12px">'+profile.socials.map(s=>'<div style="width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:1px solid '+cardBorder+';background:rgba(255,255,255,.04)">'+(socialIcons[s.platform]||'&#128279;')+'</div>').join('')+'</div>';
+}
+
+el.innerHTML=bgHtml+
+'<div style="position:relative;z-index:1">'+
+  '<div style="'+avatarCss+'">'+(profile.avatar?'<img src="'+profile.avatar+'" style="width:100%;height:100%;object-fit:cover">':username.charAt(0).toUpperCase())+'</div>'+
+  '<div style="font-weight:700;font-size:15px;color:'+textColor+'">'+username+verified+'</div>'+
+  '<div style="font-size:10px;color:'+textSec+';margin-bottom:8px">@'+username+'</div>'+
+  (bioText?'<div style="font-size:11px;color:'+textSec+';margin-bottom:12px;line-height:1.5">'+bioText+(profile.bio||'').length>60?'...':''+'</div>':'')+
+  socialsHtml+
+  '<div>'+linksHtml+'</div>'+
+  (!enabledLinks.length?'<div style="font-size:11px;color:'+textSec+';padding:12px">Noch keine Links</div>':'')+
+'</div>';
+}
 
 document.getElementById('bioInput')?.addEventListener('input',function(){document.getElementById('bioCount').textContent=this.value.length});
+document.getElementById('bioInput')?.addEventListener('blur',function(){profile.bio=this.value;fetch('/api/profile',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({bio:this.value})}).then(()=>renderMiniPreview())});
 document.getElementById('bgGradAngle')?.addEventListener('input',function(){document.getElementById('bgGradAngleVal').textContent=this.value+'°'});
 document.getElementById('togglePassProtect')?.addEventListener('click',function(){setTimeout(()=>{document.getElementById('passProtectRow').style.display=isOn('togglePassProtect')?'block':'none'},50)});
 async function doLogout(){await fetch('/api/logout',{method:'POST'});window.location.href='/'}

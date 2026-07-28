@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSINT Hub — Open Source Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;color:#e2e8f0;font-family:'Inter',sans-serif;overflow-x:hidden}
+canvas#matrix{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:.08}
+.hero{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(0,255,65,.06) 0%,transparent 70%)}
+.glow-line{width:200px;height:2px;background:linear-gradient(90deg,transparent,#00ff41,transparent);margin:0 auto 30px;animation:pulse 3s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.4;box-shadow:0 0 10px #00ff4144}50%{opacity:1;box-shadow:0 0 30px #00ff4188}}
+.logo-text{font-family:'JetBrains Mono',monospace;font-size:clamp(2.5rem,6vw,5rem);font-weight:700;color:#00ff41;text-shadow:0 0 40px #00ff4144;letter-spacing:-2px;margin-bottom:8px}
+.logo-sub{font-family:'JetBrains Mono',monospace;font-size:clamp(.8rem,2vw,1.1rem);color:#4ade80;opacity:.7;letter-spacing:4px;text-transform:uppercase;margin-bottom:40px}
+.tagline{font-size:clamp(1rem,2.5vw,1.4rem);color:#94a3b8;max-width:600px;line-height:1.7;margin-bottom:50px}
+.tagline strong{color:#e2e8f0}
+.cta-btn{display:inline-flex;align-items:center;gap:12px;padding:16px 40px;background:linear-gradient(135deg,#00ff41,#0ea548);color:#000;font-weight:800;font-size:1.1rem;border:none;border-radius:12px;cursor:pointer;text-decoration:none;transition:all .3s;box-shadow:0 0 30px #00ff4133}
+.cta-btn:hover{transform:translateY(-2px);box-shadow:0 0 50px #00ff4166}
+.cta-btn svg{width:20px;height:20px}
+.stats-row{display:flex;gap:40px;margin-top:60px;flex-wrap:wrap;justify-content:center}
+.stat{text-align:center}
+.stat-num{font-family:'JetBrains Mono',monospace;font-size:2rem;font-weight:700;color:#00ff41}
+.stat-label{font-size:.8rem;color:#64748b;text-transform:uppercase;letter-spacing:2px;margin-top:4px}
+.features{position:relative;z-index:1;padding:80px 20px;max-width:1200px;margin:0 auto}
+.features-title{text-align:center;font-size:2rem;font-weight:800;margin-bottom:50px;color:#e2e8f0}
+.features-title span{color:#00ff41}
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.feature-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:30px;transition:all .3s}
+.feature-card:hover{border-color:#00ff4133;transform:translateY(-3px);box-shadow:0 10px 40px rgba(0,255,65,.05)}
+.feature-icon{font-size:2rem;margin-bottom:15px}
+.feature-card h3{font-size:1.1rem;font-weight:700;margin-bottom:8px;color:#e2e8f0}
+.feature-card p{font-size:.85rem;color:#64748b;line-height:1.6}
+.tools-scroll{position:relative;z-index:1;padding:60px 20px;overflow:hidden}
+.tools-title{text-align:center;font-size:1.5rem;font-weight:700;margin-bottom:40px;color:#64748b}
+.tools-track{display:flex;gap:16px;animation:scroll 30s linear infinite;width:max-content}
+.tools-track:hover{animation-play-state:paused}
+@keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.tool-chip{flex-shrink:0;padding:10px 20px;background:rgba(0,255,65,.06);border:1px solid rgba(0,255,65,.15);border-radius:100px;font-size:.85rem;color:#4ade80;white-space:nowrap;font-family:'JetBrains Mono',monospace}
+.footer{position:relative;z-index:1;text-align:center;padding:60px 20px;border-top:1px solid rgba(255,255,255,.05);color:#475569;font-size:.8rem}
+.footer a{color:#00ff41;text-decoration:none}
+.terminal{position:relative;z-index:1;max-width:700px;margin:0 auto 60px;background:#0a0a0a;border:1px solid #1a1a2e;border-radius:12px;overflow:hidden}
+.terminal-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;background:#111;border-bottom:1px solid #1a1a2e}
+.terminal-dot{width:12px;height:12px;border-radius:50%}
+.terminal-dot.r{background:#ff5f57}.terminal-dot.y{background:#febc2e}.terminal-dot.g{background:#28c840}
+.terminal-title{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:#64748b;margin-left:10px}
+.terminal-body{padding:20px;font-family:'JetBrains Mono',monospace;font-size:.85rem;color:#4ade80;min-height:200px;line-height:1.8}
+.terminal-body .cmd{color:#00ff41}.terminal-body .output{color:#94a3b8}.terminal-body .highlight{color:#fbbf24}
+</style>
+</head>
+<body>
+<canvas id="matrix"></canvas>
+
+<div class="hero">
+  <div class="glow-line"></div>
+  <div class="logo-text">[ OSINT Hub ]</div>
+  <div class="logo-sub">Open Source Intelligence Toolkit</div>
+  <p class="tagline">
+    Durchsuche <strong>50+ Plattformen</strong>, analysiere <strong>E-Mails, IPs, Domains, Telefonnummern</strong>, extrahiere <strong>Metadaten</strong> und prüfe <strong>Datenlecks</strong> — alles an einem Ort.
+  </p>
+  <a href="/osint/app" class="cta-btn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    Intelligence starten
+  </a>
+  <div class="stats-row">
+    <div class="stat"><div class="stat-num" id="statPlatforms">53</div><div class="stat-label">Plattformen</div></div>
+    <div class="stat"><div class="stat-num">10</div><div class="stat-label">Tools</div></div>
+    <div class="stat"><div class="stat-num">100%</div><div class="stat-label">Kostenlos</div></div>
+    <div class="stat"><div class="stat-num">0</div><div class="stat-label">API Keys</div></div>
+  </div>
+</div>
+
+<div class="terminal">
+  <div class="terminal-bar">
+    <div class="terminal-dot r"></div><div class="terminal-dot y"></div><div class="terminal-dot g"></div>
+    <span class="terminal-title">osint@hub ~ %</span>
+  </div>
+  <div class="terminal-body" id="terminalBody"></div>
+</div>
+
+<div class="features">
+  <div class="features-title">Alles was du <span>brauchst</span></div>
+  <div class="feature-grid">
+    <div class="feature-card"><div class="feature-icon">🔍</div><h3>Username OSINT</h3><p>Überprüfe einen Username auf 50+ Plattformen gleichzeitig. GitHub, Twitter, Instagram, TikTok, Reddit, Steam und viele mehr.</p></div>
+    <div class="feature-card"><div class="feature-icon">📧</div><h3>E-Mail Analyse</h3><p>Validiere E-Mail-Adressen, prüfe MX-Records, erkenne Disposables, finde Gravatar-Profile und analysiere E-Mail-Reputation.</p></div>
+    <div class="feature-card"><div class="feature-icon">🌐</div><h3>IP Intelligence</h3><p>Geolocation, ISP, AS-Nummer, Reverse DNS, Proxy/VPN-Erkennung und Hosting-Erkennung — alles in einem Lookup.</p></div>
+    <div class="feature-card"><div class="feature-icon">🏛️</div><h3>Domain Recon</h3><p>DNS-Records (A, AAAA, MX, NS, TXT), HTTP-Header, Technologie-Erkennung, SSL-Zertifikate und mehr.</p></div>
+    <div class="feature-card"><div class="feature-icon">📱</div><h3>Telefon OSINT</h3><p>Format-Validierung, Länder-Erkennung, Carrier-Suche, Ländervorwahl und E.164-Formatierung für internationale Nummern.</p></div>
+    <div class="feature-card"><div class="feature-icon">🔐</div><h3>Passwort-Check</h3><p>Prüfe Passwörter gegen die HIBP-Datenbank (k-Anonymity), analysiere Entropie, Stärke und geschätzte Knackzeit.</p></div>
+    <div class="feature-card"><div class="feature-icon">🗂️</div><h3>EXIF-Metadaten</h3><p>Extrahiere Kamera-Modelle, GPS-Koordinaten, Software, Aufnahmedaten und versteckte Metadaten aus Bildern.</p></div>
+    <div class="feature-card"><div class="feature-icon">🔗</div><h3>Google Dorks</h3><p>Vorgefertigte Suchbefehle für E-Mails, Login-Seiten, Dateien, Subdomains, Social Media und Sicherheitslücken.</p></div>
+    <div class="feature-card"><div class="feature-icon">📶</div><h3>WiFi OSINT</h3><p>Hersteller-Erkennung über BSSID/MAC-Adresse, OUI-Lookup und Netzwerk-Informationen.</p></div>
+  </div>
+</div>
+
+<div class="tools-scroll">
+  <div class="tools-title">Unterstützte Tools & Plattformen</div>
+  <div class="tools-track" id="toolsTrack"></div>
+</div>
+
+<div class="footer">
+  <p>OSINT Hub — Nur für legale und ethische Zwecke verwendet. <a href="/osint/app">Zum Dashboard →</a></p>
+</div>
+
+<script>
+const canvas=document.getElementById('matrix');const ctx=canvas.getContext('2d');
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight}
+resizeCanvas();window.addEventListener('resize',resizeCanvas);
+const cols=Math.floor(canvas.width/14);const drops=Array(cols).fill(1);
+const chars='アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF{}[]<>/\\|';
+function drawMatrix(){ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#00ff41';ctx.font='12px JetBrains Mono';
+for(let i=0;i<drops.length;i++){const t=chars[Math.floor(Math.random()*chars.length)];ctx.fillText(t,i*14,drops[i]*14);if(drops[i]*14>canvas.height&&Math.random()>.975)drops[i]=0;drops[i]++}}
+setInterval(drawMatrix,50);
+
+const lines=[
+  {cmd:'osint --username "john_doe"',output:'[✓] GitHub: github.com/john_doe',hl:false},
+  {cmd:'osint --email "test@gmail.com"',output:'[✓] MX: alt1.gmail-smtp-in.l.google.com',hl:false},
+  {cmd:'osint --ip "8.8.8.8"',output:'[✓] Google LLC — Mountain View, CA',hl:false},
+  {cmd:'osint --domain "example.com"',output:'[✓] Cloudflare | WordPress | SSL valid',hl:false},
+  {cmd:'osint --password "••••••••"',output:'[!] Stärke: Schwach — 3 Leaks gefunden',hl:true},
+  {cmd:'osint --phone "+49 170 1234567"',output:'[✓] 🇩🇪 Deutschland — Mobilnetz',hl:false},
+  {cmd:'osint --exif photo.jpg',output:'[✓] GPS: 48.8566° N, 2.3522° E — Canon EOS R5',hl:false},
+  {cmd:'osint --dorks "target.com"',output:'[✓] 18 Dork-Vorlagen generiert',hl:false},
+];
+let termIdx=0;const termEl=document.getElementById('terminalBody');
+function typeTerminal(){
+  if(termIdx>=lines.length)termIdx=0;
+  const l=lines[termIdx];termIdx++;
+  const cmdDiv=document.createElement('div');cmdDiv.innerHTML='<span class="cmd">$ </span>';termEl.appendChild(cmdDiv);
+  let ci=0;const iv=setInterval(()=>{if(ci<l.cmd.length){cmdDiv.innerHTML='<span class="cmd">$ </span>'+l.cmd.substring(0,ci+1);ci++}else{clearInterval(iv);
+  setTimeout(()=>{const outDiv=document.createElement('div');outDiv.className=l.hl?'highlight':'output';outDiv.textContent=l.output;termEl.appendChild(outDiv);termEl.scrollTop=termEl.scrollHeight;
+  setTimeout(typeTerminal,1500)},400)}},30);
+}
+typeTerminal();
+
+const tools=['Username Check','E-Mail OSINT','IP Geolocation','Domain Recon','Phone Lookup','Password Check','EXIF Parser','Google Dorks','WiFi OSINT','HIBP','Gravatar','DNS Records','SSL Check','WHOIS','BSSID Lookup','BTC Wallet','ETH Wallet','Tech Detection','Disposable Email','Email Reputation'];
+const track=document.getElementById('toolsTrack');
+const dup=[...tools,...tools];
+dup.forEach(t=>{const c=document.createElement('div');c.className='tool-chip';c.textContent=t;track.appendChild(c)});
+</script>
+</body>
+</html>
