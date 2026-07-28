@@ -293,7 +293,7 @@ function httpGet(url, opts = {}) {
   });
 }
 
-app.post('/api/osint/username', auth, async (req, res) => {
+app.post('/api/osint/username', async (req, res) => {
   const { username } = req.body;
   if (!username || username.length < 2) return res.status(400).json({ error: 'Username nötig (mind. 2 Zeichen)' });
   const u = username.toLowerCase().replace(/[^a-z0-9._-]/g, '');
@@ -313,7 +313,7 @@ app.post('/api/osint/username', auth, async (req, res) => {
   res.json({ username: u, total: results.length, found, results: results.sort((a, b) => (a.status === 'found' ? -1 : 1) - (b.status === 'found' ? -1 : 1)) });
 });
 
-app.post('/api/osint/email', auth, async (req, res) => {
+app.post('/api/osint/email', async (req, res) => {
   const { email } = req.body;
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Ungültige E-Mail' });
   const domain = email.split('@')[1];
@@ -342,7 +342,7 @@ app.post('/api/osint/email', auth, async (req, res) => {
   res.json(result);
 });
 
-app.post('/api/osint/ip', auth, async (req, res) => {
+app.post('/api/osint/ip', async (req, res) => {
   const { ip } = req.body;
   if (!ip) return res.status(400).json({ error: 'IP-Adresse nötig' });
   const ipClean = ip.trim();
@@ -364,7 +364,7 @@ app.post('/api/osint/ip', auth, async (req, res) => {
   res.status(500).json({ error: 'IP-Lookup fehlgeschlagen' });
 });
 
-app.post('/api/osint/domain', auth, async (req, res) => {
+app.post('/api/osint/domain', async (req, res) => {
   const { domain } = req.body;
   if (!domain) return res.status(400).json({ error: 'Domain nötig' });
   const d = domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '').toLowerCase();
@@ -408,7 +408,7 @@ app.post('/api/osint/domain', auth, async (req, res) => {
   res.json(result);
 });
 
-app.post('/api/osint/phone', auth, async (req, res) => {
+app.post('/api/osint/phone', async (req, res) => {
   const { phone } = req.body;
   if (!phone) return res.status(400).json({ error: 'Telefonnummer nötig' });
   const raw = phone.replace(/[\s\-\(\)]/g, '');
@@ -485,7 +485,7 @@ app.post('/api/osint/password', async (req, res) => {
   res.json({ breachCount, breached: breachCount > 0, strength, score, entropy: Math.round(entropy), checks, timeToCrack });
 });
 
-app.post('/api/osint/exif', auth, upload.single('image'), async (req, res) => {
+app.post('/api/osint/exif', upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Kein Bild' });
   try {
     const buf = fs.readFileSync(req.file.path);
@@ -551,7 +551,7 @@ app.post('/api/osint/exif', auth, upload.single('image'), async (req, res) => {
   } catch (e) { if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); res.json({ filename: req.file.originalname, size: req.file.size, exif: {}, hasExif: false, error: e.message }); }
 });
 
-app.get('/api/osint/dorks', auth, (req, res) => {
+app.get('/api/osint/dorks', (req, res) => {
   const { target } = req.query;
   const t = target || 'example';
   const dorks = [
@@ -597,7 +597,7 @@ app.get('/api/osint/dorks', auth, (req, res) => {
   res.json({ target: t, dorks });
 });
 
-app.get('/api/osint/crypto/:address', auth, async (req, res) => {
+app.get('/api/osint/crypto/:address', async (req, res) => {
   const addr = req.params.address;
   const result = { address: addr, chain: 'unknown', balance: 0, transactions: 0 };
   if (/^(1|3|bc1)/.test(addr)) {
@@ -616,7 +616,7 @@ app.get('/api/osint/crypto/:address', auth, async (req, res) => {
   res.json(result);
 });
 
-app.get('/api/osint/wifi', auth, async (req, res) => {
+app.get('/api/osint/wifi', async (req, res) => {
   const { bssid } = req.query;
   if (!bssid) return res.status(400).json({ error: 'BSSID nötig' });
   const mac = bssid.replace(/[:\-\.]/g, '').toUpperCase();
@@ -641,7 +641,7 @@ app.get('/api/osint/wifi', auth, async (req, res) => {
   res.json({ bssid: mac, oui, vendor, formatted: mac.match(/.{2}/g).join(':') });
 });
 
-app.post('/api/osint/cryptocurrency', auth, async (req, res) => {
+app.post('/api/osint/cryptocurrency', async (req, res) => {
   const { address, chain } = req.body;
   if (!address) return res.status(400).json({ error: 'Adresse nötig' });
   let detected = chain || 'unknown';
@@ -668,7 +668,7 @@ app.post('/api/osint/cryptocurrency', auth, async (req, res) => {
 });
 
 app.get('/osint', (req, res) => res.sendFile(path.join(STATIC_DIR, 'osint.html')));
-app.get('/osint/app', auth, (req, res) => res.sendFile(path.join(STATIC_DIR, 'osint-app.html')));
+app.get('/osint/app', (req, res) => res.sendFile(path.join(STATIC_DIR, 'osint-app.html')));
 
 // ============= END OSINT =============
 
